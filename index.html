@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idea Graveyard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0E0E0E;--bg2:#161616;--bg3:#1C1C1C;
+  --border:rgba(255,255,255,0.08);--border-warm:rgba(255,220,180,0.13);
+  --teal:#1D9E75;--teal-dim:rgba(29,158,117,0.12);--teal-light:#9FE1CB;
+  --text:#F0EDE8;--text2:#C2BFB9;--text3:#999;--text4:#777;
+  --amber:#F5C87A;--red:#E88888;
+  --mono:'IBM Plex Mono',monospace;--sans:'Inter',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px}
+
+/* ── HEADER ── */
+.header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:var(--bg);
+  border-bottom:0.5px solid var(--border);
+  height:56px;
+  display:flex;align-items:center;
+  padding:0 28px;gap:20px;
+}
+.logo{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.logo-mark{
+  width:32px;height:32px;flex-shrink:0;
+  border:0.5px solid rgba(255,220,180,0.25);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.logo-name{font-size:15px;font-weight:500;white-space:nowrap}
+.logo-tag{font-size:10px;color:var(--text4);font-family:var(--mono);white-space:nowrap}
+
+
+
+.add-btn{
+  flex-shrink:0;
+  display:flex;align-items:center;gap:7px;
+  background:var(--teal);color:#fff;border:none;
+  border-radius:8px;padding:9px 18px;
+  font-size:13px;font-weight:500;font-family:var(--sans);
+  cursor:pointer;transition:opacity .15s;white-space:nowrap;
+}
+.add-btn:hover{opacity:.85}
+.add-btn svg{width:14px;height:14px;stroke:#fff;stroke-width:2.5;fill:none;flex-shrink:0}
+
+/* ── MAIN ── */
+.main{margin-top:56px;padding:28px}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat{background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s}
+.stat:hover{border-color:rgba(255,255,255,0.18)}
+.stat.active{border-color:rgba(255,220,180,0.35);background:var(--bg3)}
+.stat-label{font-family:var(--mono);font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.stat-num{font-family:var(--mono);font-size:26px;font-weight:500}
+
+/* ── BANNER ── */
+.banner{
+  background:var(--teal-dim);border:0.5px solid rgba(29,158,117,0.25);
+  border-radius:10px;padding:11px 16px;margin-bottom:18px;
+  display:flex;align-items:center;gap:9px;
+  font-size:13px;color:var(--teal-light);
+}
+
+/* ── STREAK ── */
+.streak{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.streak-label{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.streak-dots{display:flex;gap:6px}
+.s-dot{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;font-weight:500;
+  border:1.5px solid rgba(255,255,255,0.22);
+  background:transparent;color:#AAA;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.s-dot.on{
+  background:var(--teal);
+  border-color:var(--teal);
+  color:#fff;
+}
+.s-dot.missed{
+  border-color:rgba(255,255,255,0.18);
+  color:#777;
+}
+.s-dot.future{
+  border-color:rgba(255,255,255,0.1);
+  color:#666;
+}
+.s-dot.today:not(.on){
+  border-color:rgba(29,158,117,0.6);
+  color:var(--teal-light);
+}
+
+
+/* ── FILTERS ── */
+.filters{display:flex;align-items:center;gap:7px;margin-bottom:22px;flex-wrap:wrap}
+.tab{
+  font-family:var(--mono);font-size:11px;
+  padding:5px 13px;border-radius:6px;
+  border:0.5px solid var(--border);
+  background:transparent;color:var(--text3);
+  cursor:pointer;transition:all .15s;
+}
+.tab:hover{color:var(--text);border-color:rgba(255,255,255,0.15)}
+.tab.active{background:var(--bg2);border-color:rgba(255,220,180,0.2);color:var(--text)}
+.filter-select{
+  font-family:var(--mono);font-size:11px;
+  padding:5px 10px;border-radius:6px;
+  border:0.5px solid var(--border);
+  background:transparent;color:var(--text3);
+  cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23555'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+  padding-right:22px;
+}
+.filter-select option{background:#1a1a1a;color:var(--text)}
+
+/* ── BOARD ── */
+.board{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.board > div{display:flex;flex-direction:column}
+.col-head{
+  font-family:var(--mono);font-size:10px;
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text3);margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.col-count{
+  background:rgba(255,255,255,0.05);
+  border-radius:100px;padding:2px 8px;font-size:9px;color:var(--text4);
+}
+.zone{
+  min-height:300px;border:0.5px dashed rgba(255,255,255,0.07);
+  border-radius:12px;padding:10px;
+  display:flex;flex-direction:column;gap:9px;
+  transition:background .2s,border-color .2s;
+  height:100%;
+}
+.zone-spacer{
+  flex:1;min-height:40px;
+}
+.zone.over{background:rgba(29,158,117,0.06);border-color:rgba(29,158,117,0.35)}
+
+/* ── CARD ── */
+@keyframes flyRight{
+  0%{transform:translateX(0) scale(1);opacity:1}
+  40%{transform:translateX(60px) scale(0.92);opacity:0}
+  41%{transform:translateX(-60px) scale(0.92);opacity:0}
+  100%{transform:translateX(0) scale(1);opacity:1}
+}
+@keyframes flyLeft{
+  0%{transform:translateX(0) scale(1);opacity:1}
+  40%{transform:translateX(-60px) scale(0.92);opacity:0}
+  41%{transform:translateX(60px) scale(0.92);opacity:0}
+  100%{transform:translateX(0) scale(1);opacity:1}
+}
+@keyframes popIn{
+  0%{transform:scale(0.88) translateY(10px);opacity:0}
+  60%{transform:scale(1.03) translateY(-2px);opacity:1}
+  100%{transform:scale(1) translateY(0);opacity:1}
+}
+@keyframes buryOut{
+  0%{transform:scale(1) translateY(0);opacity:1;filter:grayscale(0)}
+  100%{transform:scale(0.94) translateY(6px);opacity:0;filter:grayscale(1)}
+}
+@keyframes reviveIn{
+  0%{transform:scale(0.9) translateY(8px);opacity:0;filter:grayscale(1)}
+  50%{filter:grayscale(0)}
+  100%{transform:scale(1) translateY(0);opacity:1;filter:grayscale(0)}
+}
+.card{
+  background:var(--bg2);border:0.5px solid var(--border-warm);
+  border-radius:11px;padding:14px 16px;
+  cursor:grab;display:flex;flex-direction:column;gap:9px;
+  user-select:none;transition:border-color .15s,opacity .12s;
+}
+.card.anim-bury{animation:buryOut .35s ease forwards}
+.card.anim-revive{animation:reviveIn .4s cubic-bezier(.22,1,.36,1) forwards}
+.card:hover{border-color:rgba(255,220,180,0.22)}
+.card.dragging{opacity:.3;cursor:grabbing}
+.card.pursuing{border-left:2.5px solid var(--teal);border-radius:0 11px 11px 0}
+.card.hot{border-color:rgba(29,158,117,0.45)}
+
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card-title{font-size:13px;font-weight:500;line-height:1.35;flex:1;color:var(--text)}
+
+.badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:100px;flex-shrink:0;white-space:nowrap}
+.badge-pursuing{background:rgba(29,158,117,0.15);color:var(--teal-light);border:0.5px solid rgba(29,158,117,0.3)}
+.badge-hot{background:rgba(29,158,117,0.15);color:var(--teal-light);border:0.5px solid rgba(29,158,117,0.3)}
+.badge-warm{background:rgba(200,137,42,0.13);color:var(--amber);border:0.5px solid rgba(200,137,42,0.28)}
+.badge-cold{background:rgba(100,100,100,0.1);color:var(--text3);border:0.5px solid rgba(100,100,100,0.18)}
+
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:100px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);color:var(--text3)}
+.chip-link{color:var(--teal-light);border-color:rgba(29,158,117,0.22);background:rgba(29,158,117,0.08)}
+.chip-file{color:var(--amber);border-color:rgba(200,137,42,0.22);background:rgba(200,137,42,0.08)}
+
+.card-note{font-size:12px;color:var(--text2);line-height:1.5}
+.card-kill{font-size:12px;color:var(--text3);font-style:italic;line-height:1.5}
+
+.card-foot{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-top:9px;border-top:0.5px solid rgba(255,255,255,0.06);
+  gap:6px;
+}
+.card-date{font-family:var(--mono);font-size:9px;color:var(--text4)}
+.card-actions{display:flex;gap:5px}
+
+.act{
+  font-size:11px;padding:3px 10px;border-radius:5px;
+  border:0.5px solid rgba(255,255,255,0.09);
+  background:transparent;color:var(--text2);
+  cursor:pointer;font-family:var(--sans);transition:all .15s;
+}
+.act:hover{border-color:rgba(255,255,255,0.18);color:var(--text)}
+.act-revive{border-color:rgba(29,158,117,0.28);color:var(--teal-light)}
+.act-revive:hover{background:rgba(29,158,117,0.1)}
+.act-bury{border-color:rgba(200,60,60,0.28);color:var(--red)}
+.act-bury:hover{background:rgba(200,60,60,0.1)}
+
+.revisit-flag{
+  font-family:var(--mono);font-size:9px;
+  color:var(--teal-light);display:flex;align-items:center;gap:3px;
+}
+.drag-hint{
+  font-family:var(--mono);font-size:10px;color:var(--text4);
+  text-align:center;padding:36px 12px;
+}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);
+  z-index:200;display:flex;align-items:center;justify-content:center;
+  padding:20px;backdrop-filter:blur(3px);
+}
+.modal{
+  background:#141414;border:0.5px solid rgba(255,220,180,0.18);
+  border-radius:14px;width:100%;max-width:520px;
+  max-height:90vh;overflow-y:auto;padding:26px;
+}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.modal-title{font-size:16px;font-weight:500;color:#F5F2ED}
+.modal-close{
+  width:28px;height:28px;border-radius:6px;
+  border:0.5px solid rgba(255,255,255,0.14);
+  background:transparent;color:#C2BFB9;
+  cursor:pointer;font-size:18px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.modal-close:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+
+
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-family:var(--mono);font-size:9px;
+  color:#999;text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:5px;
+}
+.field input,.field textarea{
+  width:100%;background:rgba(255,255,255,0.05);
+  border:0.5px solid rgba(255,255,255,0.14);border-radius:8px;
+  padding:9px 12px;color:#F0EDE8;
+  font-family:var(--sans);font-size:13px;outline:none;
+  transition:border-color .15s;
+}
+.field input:focus,.field textarea:focus{border-color:rgba(255,255,255,0.22)}
+.field input::placeholder,.field textarea::placeholder{color:#555}
+.field textarea{min-height:80px;resize:vertical}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.score-row{display:flex;align-items:center;gap:12px}
+.score-row input[type=range]{flex:1;accent-color:var(--teal)}
+.score-disp{font-family:var(--mono);font-size:13px;color:var(--teal-light);min-width:20px;text-align:center}
+
+.modal-btns{
+  display:flex;gap:10px;
+  margin-top:22px;padding-top:18px;
+  border-top:0.5px solid rgba(255,255,255,0.07);
+}
+.btn-bury{
+  flex:1;padding:10px;border-radius:8px;
+  font-size:13px;font-weight:500;cursor:pointer;
+  font-family:var(--sans);
+  background:transparent;border:0.5px solid rgba(210,70,70,0.35);
+  color:var(--red);transition:background .15s;
+}
+.btn-bury:hover{background:rgba(210,70,70,0.08)}
+.btn-pursue{
+  flex:1;padding:10px;border-radius:8px;
+  font-size:13px;font-weight:500;cursor:pointer;
+  font-family:var(--sans);
+  background:var(--teal);border:none;color:#fff;
+  transition:opacity .15s;
+}
+.btn-pursue:hover{opacity:.87}
+
+/* ── DRAWER ── */
+.drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150}
+.drawer{
+  position:fixed;right:0;top:0;bottom:0;
+  width:420px;background:#131313;
+  border-left:0.5px solid var(--border-warm);
+  z-index:151;overflow-y:auto;padding:28px 24px;
+  display:flex;flex-direction:column;gap:18px;
+  transform:translateX(100%);transition:transform .25s ease;
+}
+.drawer.open{transform:translateX(0)}
+.drawer-title{font-size:18px;font-weight:500;line-height:1.3}
+.drawer-label{font-family:var(--mono);font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.drawer-text{font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap}
+.drawer-divider{height:0.5px;background:rgba(255,255,255,0.07)}
+.drawer-link{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:12px;color:var(--teal-light);
+  border:0.5px solid rgba(29,158,117,0.22);
+  border-radius:7px;padding:6px 12px;
+  background:rgba(29,158,117,0.08);
+  text-decoration:none;word-break:break-all;
+  transition:opacity .15s;
+}
+.drawer-link:hover{opacity:.8}
+.score-meter{display:flex;align-items:center;gap:10px}
+.meter-track{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.meter-fill{height:100%;background:var(--teal);border-radius:2px;transition:width .3s}
+.drawer-actions{
+  display:flex;gap:8px;flex-wrap:wrap;
+  margin-top:auto;padding-top:16px;
+  border-top:0.5px solid rgba(255,255,255,0.07);
+}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:300;
+  background:#1A1A1A;border:0.5px solid rgba(255,220,180,0.2);
+  color:var(--text);border-radius:9px;
+  padding:11px 18px;font-size:12px;font-family:var(--mono);
+  opacity:0;transform:translateY(8px);
+  transition:opacity .25s,transform .25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* RIP overlay */
+@keyframes ripFadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes ripFadeOut{0%{opacity:1}100%{opacity:0}}
+@keyframes stoneSway{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
+@keyframes dirtSettle{0%{transform:scaleX(0.5);opacity:0}100%{transform:scaleX(1);opacity:1}}
+@keyframes ghostFloat{0%,100%{transform:translateY(0);opacity:.8}50%{transform:translateY(-8px);opacity:1}}
+@keyframes sceneIn{0%{transform:translateY(20px);opacity:0}100%{transform:translateY(0);opacity:1}}
+.rip-overlay{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,.82);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);
+  animation:ripFadeIn .3s ease forwards;
+  cursor:pointer;
+}
+.rip-overlay.out{animation:ripFadeOut .4s ease forwards}
+.rip-scene{
+  display:flex;flex-direction:column;align-items:center;gap:0;
+  animation:sceneIn .45s cubic-bezier(.22,1,.36,1) forwards;
+}
+.rip-ghost{font-size:40px;animation:ghostFloat 2s ease-in-out infinite;margin-bottom:6px}
+.rip-stone{animation:stoneSway 3s ease-in-out infinite;transform-origin:bottom center}
+.rip-stone svg{display:block}
+.rip-dirt{
+  width:150px;height:16px;
+  background:linear-gradient(to bottom,#3a2a18,#1a1208);
+  border-radius:50%;margin-top:-4px;
+  animation:dirtSettle .5s .25s cubic-bezier(.22,1,.36,1) both;
+  box-shadow:0 6px 24px rgba(0,0,0,.6);
+}
+.rip-label{
+  font-family:var(--mono);font-size:11px;color:#666;
+  margin-top:18px;letter-spacing:.08em;
+}
+/* REVIVE overlay */
+@keyframes dirtCrack{0%{transform:scaleX(1);opacity:1}60%{transform:scaleX(1.15);opacity:.8}100%{transform:scaleX(0.4);opacity:0}}
+@keyframes bodyRise{0%{transform:translateY(60px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes handPoke{0%{transform:translateY(30px);opacity:0}40%{transform:translateY(-8px);opacity:1}60%{transform:translateY(-4px)}100%{transform:translateY(-10px);opacity:1}}
+@keyframes sparkle{0%{transform:scale(0) rotate(0deg);opacity:0}50%{transform:scale(1.2) rotate(180deg);opacity:1}100%{transform:scale(0) rotate(360deg);opacity:0}}
+@keyframes groundShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+.revive-scene{display:flex;flex-direction:column;align-items:center;position:relative}
+.revive-sparks{position:absolute;top:-20px;width:200px;height:60px;pointer-events:none}
+.spark{position:absolute;font-size:14px;animation:sparkle .8s ease forwards}
+.revive-figure{position:relative;display:flex;flex-direction:column;align-items:center}
+.revive-body{font-size:54px;animation:bodyRise .7s .15s cubic-bezier(.22,1,.36,1) both;z-index:2}
+.revive-hand{font-size:32px;animation:handPoke .6s cubic-bezier(.22,1,.36,1) forwards;z-index:2;margin-top:-8px}
+.revive-crack{width:150px;height:14px;background:linear-gradient(to bottom,#3a2a18,#1a1208);border-radius:50%;animation:dirtCrack .6s .05s ease forwards;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.revive-ground{width:200px;height:20px;background:linear-gradient(to bottom,#3a2a18,#1a1208);border-radius:50%;margin-top:-4px;animation:groundShake .5s .1s ease both;box-shadow:0 6px 24px rgba(0,0,0,.6);position:relative;z-index:1}
+.revive-ground::after{content:'';position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:60%;height:8px;background:rgba(29,158,117,0.3);border-radius:50%;filter:blur(4px)}
+.revive-label{font-family:var(--mono);font-size:11px;color:#9FE1CB;margin-top:16px;letter-spacing:.08em}
+.revive-sublabel{font-family:var(--mono);font-size:9px;color:#555;margin-top:4px;letter-spacing:.06em}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+
+@media(max-width:700px){
+  .header{padding:0 16px;gap:10px}
+  .main{padding:16px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .board{grid-template-columns:1fr}
+  .drawer{width:100%}
+  .field-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER: always visible, fixed -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">🪦</div>
+    <div>
+      <div class="logo-name">Idea Graveyard</div>
+      <div class="logo-tag">// where ideas wait for their moment</div>
+    </div>
+  </div>
+
+  <button class="add-btn" id="add-btn" onclick="openAddModal()">
+    <svg viewBox="0 0 14 14"><line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/></svg>
+    Add idea
+  </button>
+</header>
+
+<main class="main">
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat" id="stat-all" onclick="setStatFilter('all')"><div class="stat-label">Total ideas</div><div class="stat-num" id="s-total">0</div></div>
+    <div class="stat" id="stat-pursuing" onclick="setStatFilter('pursuing')"><div class="stat-label">Pursuing</div><div class="stat-num" id="s-pursuing">0</div></div>
+    <div class="stat" id="stat-buried" onclick="setStatFilter('buried')"><div class="stat-label">Buried</div><div class="stat-num" id="s-buried">0</div></div>
+    <div class="stat" id="stat-hot" onclick="setStatFilter('hot')"><div class="stat-label">Hot 🔥</div><div class="stat-num" id="s-hot">0</div></div>
+  </div>
+
+  <!-- Banner -->
+  <div class="banner" id="banner" style="display:none">
+    <span>✦</span><span id="banner-text"></span>
+  </div>
+
+  <!-- Streak -->
+  <div class="streak">
+    <span class="streak-label" id="streak-label">7-day streak</span>
+    <div class="streak-dots" id="streak-dots"></div>
+
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <button class="tab active" onclick="setTab('all',this)">All</button>
+    <button class="tab" onclick="setTab('pursuing',this)">Pursuing</button>
+    <button class="tab" onclick="setTab('buried',this)">Buried</button>
+    <select class="filter-select" id="filter-cat" onchange="render()">
+      <option value="">All categories</option>
+    </select>
+    <select class="filter-select" id="filter-sort" onchange="render()">
+      <option value="date">Newest</option>
+      <option value="score">Score ↓</option>
+      <option value="alpha">A → Z</option>
+    </select>
+  </div>
+
+  <!-- Board -->
+  <div class="board">
+    <div>
+      <div class="col-head">🌱 Pursuing <span class="col-count" id="p-cnt">0</span></div>
+      <div class="zone" id="zone-pursuing"
+        ondragover="onOver(event,'pursuing')"
+        ondragenter="onEnter(event,'pursuing')"
+        ondragleave="onLeave('pursuing')"
+        ondrop="onDrop(event,'pursuing')">
+      </div>
+    </div>
+    <div>
+      <div class="col-head">🪦 Buried <span class="col-count" id="b-cnt">0</span></div>
+      <div class="zone" id="zone-buried"
+        ondragover="onOver(event,'buried')"
+        ondragenter="onEnter(event,'buried')"
+        ondragleave="onLeave('buried')"
+        ondrop="onDrop(event,'buried')">
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Add/Edit Modal -->
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add an idea</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+
+    <div class="field">
+      <label>Idea title *</label>
+      <input id="f-title" type="text" placeholder="What's the idea?" />
+    </div>
+    <div class="field">
+      <label>Hypothesis</label>
+      <input id="f-hyp" type="text" placeholder="If we build X, then Y happens because Z..." />
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Category</label><input id="f-cat" type="text" placeholder="AI tooling, B2B..." /></div>
+      <div class="field"><label>Year</label><input id="f-year" type="number" value="2025" /></div>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="Context, research, blockers, open questions..."></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Link (Notion, Doc, Figma...)</label><input id="f-link" type="url" placeholder="https://notion.so/..." /></div>
+      <div class="field"><label>Attachment name</label><input id="f-file" type="text" placeholder="deck-v2.pdf" /></div>
+    </div>
+    <div class="field" id="score-field" style="display:none">
+      <label>Relevance score (1–10)</label>
+      <div class="score-row">
+        <input type="range" min="1" max="10" value="5" step="1" id="f-score" oninput="document.getElementById('score-disp').textContent=this.value" />
+        <span class="score-disp" id="score-disp">5</span>
+      </div>
+    </div>
+    <input type="hidden" id="f-id" />
+
+    <div class="modal-btns">
+      <button class="btn-bury" id="btn-bury"
+        onmouseenter="document.getElementById('score-field').style.display='block'"
+        onclick="saveIdea('buried')">🪦 Bury it</button>
+      <button class="btn-pursue" id="btn-pursue" onclick="saveIdea('pursuing')">Pursue it →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Drawer -->
+<div id="drawer-bg" class="drawer-bg" style="display:none" onclick="closeDrawer()"></div>
+<div id="drawer" class="drawer">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+    <div class="drawer-title" id="d-title"></div>
+    <button class="modal-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div id="d-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  <div id="d-hyp-sec" style="display:none"><div class="drawer-label">Hypothesis</div><div class="drawer-text" id="d-hyp"></div></div>
+  <div class="drawer-divider"></div>
+  <div id="d-notes-sec" style="display:none"><div class="drawer-label">Notes</div><div class="drawer-text" id="d-notes"></div></div>
+  <div id="d-kill-sec" style="display:none"><div class="drawer-label">Why it was buried</div><div class="drawer-text" id="d-kill"></div></div>
+  <div id="d-score-sec" style="display:none">
+    <div class="drawer-label">Relevance score</div>
+    <div class="score-meter">
+      <div class="meter-track"><div class="meter-fill" id="d-score-fill"></div></div>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--teal-light)" id="d-score-text"></span>
+    </div>
+  </div>
+  <div id="d-hot-sec" style="display:none">
+    <div style="background:rgba(29,158,117,0.1);border:0.5px solid rgba(29,158,117,0.25);border-radius:9px;padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--teal-light);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;justify-content:space-between">
+        <span>Why this is hot now</span>
+        <span id="d-hot-loading" style="display:none;font-size:9px;color:var(--teal-light);opacity:.6">analysing...</span>
+      </div>
+      <div class="drawer-text" id="d-hot-reason" style="color:var(--teal-light);font-style:normal;line-height:1.6"></div>
+    </div>
+  </div>
+  <div id="d-link-sec" style="display:none"><div class="drawer-label">Linked resource</div><a class="drawer-link" id="d-link" target="_blank" rel="noopener">↗ Open link</a></div>
+  <div id="d-file-sec" style="display:none"><div class="drawer-label">Attachment</div><span class="chip chip-file" id="d-file"></span></div>
+  <div class="drawer-actions" id="d-actions"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Streak: track real visit days in localStorage ──
+function initStreak() {
+  const today = new Date();
+  const todayKey = today.toISOString().slice(0, 10); // YYYY-MM-DD
+
+  // Load visit log — wrapped in try/catch for sandboxed environments
+  let visitLog = [];
+  try {
+    visitLog = JSON.parse(localStorage.getItem('ig_visits') || '[]');
+    if (!visitLog.includes(todayKey)) {
+      visitLog.push(todayKey);
+      localStorage.setItem('ig_visits', JSON.stringify(visitLog));
+    }
+  } catch(e) {
+    visitLog = [todayKey];
+  }
+
+  // Build Sun→Sat of the current week
+  const dayNames = ['S','M','T','W','T','F','S'];
+  const container = document.getElementById('streak-dots');
+  container.innerHTML = '';
+  let streakCount = 0;
+
+  // Find this week's Sunday
+  const sunday = new Date(today);
+  sunday.setDate(today.getDate() - today.getDay());
+
+  for (let i = 0; i <= 6; i++) {
+    const d = new Date(sunday);
+    d.setDate(sunday.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    const isToday = key === todayKey;
+    const isFuture = d > today;
+    const isPast = d < today && !isToday;
+    const visited = visitLog.includes(key);
+    if (visited) streakCount++;
+
+    let cls = 's-dot';
+    if (visited) cls += ' done';
+    else if (isFuture) cls += ' future';
+    else if (isPast) cls += ' missed';
+    if (isToday) cls += ' today';
+
+    const el = document.createElement('div');
+    el.className = cls;
+    el.title = key;
+    el.textContent = dayNames[i];
+    container.appendChild(el);
+  }
+
+  // Update streak label
+  const label = document.getElementById('streak-label');
+  if (label) label.textContent = streakCount + '-day streak';
+}
+
+initStreak();
+
+// ── State ──
+let activeTab = 'all';
+let activeStatFilter = 'all';
+let editingId = null;
+let dragged = null;
+
+function loadIdeas() { try { return JSON.parse(localStorage.getItem('ig_ideas') || 'null'); } catch(e) { return null; } }
+let ideas = loadIdeas() || [
+  {id:1,title:'Creator monetization layer',hyp:'Bundle subscriptions, digital products, and coaching into one dashboard.',cat:'Creator economy',year:2024,notes:'Stripe as the backend. We are the product layer. Spoke with 8 creators.',link:'https://notion.so',file:'',score:0,kill:'',state:'pursuing',created:Date.now()-5000000},
+  {id:2,title:'LLM fine-tuning for SMBs',hyp:'SMBs want private AI trained on their own data, not a shared GPT.',cat:'AI tooling',year:2023,notes:'Fine-tuning costs dropped 10x. Gap is data prep and eval tooling.',link:'',file:'market-sizing.xlsx',score:0,kill:'',state:'pursuing',created:Date.now()-2000000},
+  {id:3,title:'AI-powered meeting summarizer',hyp:'If we auto-summarize meetings, teams save 2hrs per person per week.',cat:'AI tooling',year:2021,notes:'',link:'',file:'',score:9,kill:'Seemed niche, no one paid for Zoom add-ons then',state:'buried',created:Date.now()-50000000},
+  {id:4,title:'No-code database for ops teams',hyp:'Ops managers need Airtable but simpler and cheaper.',cat:'No-code',year:2020,notes:'Spoke to 6 ops managers — all using spreadsheets for things that should be a DB.',link:'https://notion.so',file:'ops-research.pdf',score:8,kill:'Market felt too dominated by Airtable',state:'buried',created:Date.now()-80000000},
+  {id:5,title:'Autonomous DevOps agent',hyp:'If AI can write code, it can deploy and monitor it too.',cat:'AI tooling',year:2022,notes:'Early prototype showed 40% reduction in incident response time.',link:'',file:'agent-demo.mp4',score:9,kill:"Too early — ops teams weren't ready to trust AI with prod",state:'buried',created:Date.now()-40000000},
+  {id:6,title:'Vertical CRM for law firms',hyp:'Law firms hate Salesforce but need pipeline management.',cat:'Vertical SaaS',year:2022,notes:'',link:'',file:'',score:5,kill:"Sales cycle too long, couldn't close pilots fast enough",state:'buried',created:Date.now()-30000000},
+];
+
+function save() { try { localStorage.setItem('ig_ideas', JSON.stringify(ideas)); } catch(e) {} }
+
+// ── Helpers ──
+function scoreClass(s) { return s >= 8 ? 'hot' : s >= 5 ? 'warm' : 'cold'; }
+function scoreBadge(s) { return s >= 8 ? '🔥 Hot' : s >= 5 ? '🌤 Warm' : '🧊 Cold'; }
+function cats() { return [...new Set(ideas.map(i => i.cat).filter(Boolean))].sort(); }
+
+// ── Render ──
+function setStatFilter(filter) {
+  // Sync with tab buttons
+  const tabMap = { all: 'all', pursuing: 'pursuing', buried: 'buried', hot: 'buried' };
+  activeTab = tabMap[filter];
+  activeStatFilter = filter;
+
+  // Update tab buttons
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const matchingTab = [...document.querySelectorAll('.tab')].find(t => t.textContent.toLowerCase().includes(activeTab));
+  if (matchingTab) matchingTab.classList.add('active');
+
+  // Update stat card highlights
+  ['all','pursuing','buried','hot'].forEach(f => {
+    const el = document.getElementById('stat-' + f);
+    if (el) el.classList.toggle('active', f === filter);
+  });
+
+  render();
+}
+
+function render() {
+  const catF = document.getElementById('filter-cat').value;
+  const sort = document.getElementById('filter-sort').value;
+
+  let list = [...ideas];
+  if (activeStatFilter === 'hot') list = list.filter(i => i.state === 'buried' && i.score >= 7);
+  else if (activeTab === 'pursuing') list = list.filter(i => i.state === 'pursuing');
+  else if (activeTab === 'buried') list = list.filter(i => i.state === 'buried');
+  if (catF) list = list.filter(i => i.cat === catF);
+  if (sort === 'score') list.sort((a,b) => b.score - a.score);
+  else if (sort === 'alpha') list.sort((a,b) => a.title.localeCompare(b.title));
+  else list.sort((a,b) => b.created - a.created);
+
+  // stats
+  document.getElementById('s-total').textContent = ideas.length;
+  document.getElementById('s-pursuing').textContent = ideas.filter(i=>i.state==='pursuing').length;
+  document.getElementById('s-buried').textContent = ideas.filter(i=>i.state==='buried').length;
+  document.getElementById('s-hot').textContent = ideas.filter(i=>i.state==='buried'&&i.score>=8).length;
+
+  // banner
+  const hot = ideas.filter(i=>i.state==='buried'&&i.score>=7).length;
+  const banner = document.getElementById('banner');
+  if (hot > 0) {
+    banner.style.display = 'flex';
+    document.getElementById('banner-text').textContent = `${hot} buried idea${hot>1?'s':''} scored 7+ — market timing may have shifted since you killed ${hot>1?'them':'it'}.`;
+  } else { banner.style.display = 'none'; }
+
+  // category select
+  const catSel = document.getElementById('filter-cat');
+  const prev = catSel.value;
+  catSel.innerHTML = '<option value="">All categories</option>';
+  cats().forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    if (c === prev) o.selected = true;
+    catSel.appendChild(o);
+  });
+
+  // zones
+  const zp = document.getElementById('zone-pursuing');
+  const zb = document.getElementById('zone-buried');
+  zp.innerHTML = ''; zb.innerHTML = '';
+
+  const pursuing = list.filter(i=>i.state==='pursuing');
+  const buried = list.filter(i=>i.state==='buried');
+
+  if (!pursuing.length) { zp.innerHTML = '<div class="drag-hint">Drag a card here to pursue it — or hit + Add idea</div>'; }
+  else {
+    pursuing.forEach(i => zp.appendChild(makeCard(i)));
+    const spP = document.createElement('div'); spP.className = 'zone-spacer'; zp.appendChild(spP);
+  }
+
+  if (!buried.length) { zb.innerHTML = '<div class="drag-hint">Drag a card here to bury it</div>'; }
+  else {
+    buried.forEach(i => zb.appendChild(makeCard(i)));
+    const spB = document.createElement('div'); spB.className = 'zone-spacer'; zb.appendChild(spB);
+  }
+
+  document.getElementById('p-cnt').textContent = pursuing.length;
+  document.getElementById('b-cnt').textContent = buried.length;
+}
+
+function makeCard(idea) {
+  const isHot = idea.state === 'buried' && idea.score >= 7;
+  const div = document.createElement('div');
+  div.className = 'card' + (idea.state==='pursuing' ? ' pursuing' : isHot ? ' hot' : '');
+  div.dataset.id = idea.id;
+  div.draggable = true;
+
+  div.addEventListener('dragstart', e => {
+    dragged = div;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(idea.id));
+    setTimeout(() => div.classList.add('dragging'), 0);
+  });
+  div.addEventListener('dragend', () => div.classList.remove('dragging'));
+  div.addEventListener('click', () => openDrawer(idea.id));
+
+  const chips = [
+    `<span class="chip">${idea.cat}</span>`,
+    `<span class="chip" style="font-family:var(--mono)">${idea.year}</span>`,
+    idea.link ? `<span class="chip chip-link">↗ linked</span>` : '',
+    idea.file ? `<span class="chip chip-file">📎 ${idea.file}</span>` : '',
+  ].filter(Boolean).join('');
+
+  const badge = idea.state === 'pursuing'
+    ? `<span class="badge badge-pursuing">pursuing</span>`
+    : `<span class="badge badge-${scoreClass(idea.score)}">${scoreBadge(idea.score)}</span>`;
+
+  const body = idea.state === 'pursuing'
+    ? `<div class="card-note">${(idea.hyp||idea.notes||'').slice(0,90)}${(idea.hyp||idea.notes||'').length>90?'…':''}</div>`
+    : `<div class="card-kill">${idea.kill ? '"' + idea.kill.slice(0,90) + (idea.kill.length>90?'…':'') + '"' : '<span style="color:var(--text4)">No reason recorded</span>'}</div>`;
+
+  const actionBtn = idea.state === 'pursuing'
+    ? `<button class="act act-bury">🪦 Bury</button>`
+    : `<button class="act act-revive">↑ Revive</button>`;
+
+  div.innerHTML = `
+    <div class="card-top"><div class="card-title">${idea.title}</div>${badge}</div>
+    <div class="chips">${chips}</div>
+    ${body}
+    <div class="card-foot">
+      <span class="card-date">${new Date(idea.created).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>
+      <div class="card-actions">
+        <button class="act">Edit</button>
+        ${actionBtn}
+      </div>
+    </div>
+    ${isHot ? '<div class="revisit-flag">✦ worth revisiting</div>' : ''}`;
+
+  div.querySelector('.act-bury, .act-revive')?.addEventListener('click', e => {
+    e.stopPropagation();
+    changeState(idea.id, idea.state === 'pursuing' ? 'buried' : 'pursuing');
+  });
+  div.querySelectorAll('.act')[0].addEventListener('click', e => {
+    e.stopPropagation();
+    openEditModal(idea.id);
+  });
+
+  return div;
+}
+
+// ── Drag & Drop ──
+const enterCount = { pursuing: 0, buried: 0 };
+
+function onOver(e, zone) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+
+function onEnter(e, zone) {
+  e.preventDefault();
+  enterCount[zone]++;
+  document.getElementById('zone-' + zone).classList.add('over');
+}
+
+function onLeave(zone) {
+  enterCount[zone]--;
+  if (enterCount[zone] <= 0) {
+    enterCount[zone] = 0;
+    document.getElementById('zone-' + zone).classList.remove('over');
+  }
+}
+
+function onDrop(e, zone) {
+  e.preventDefault();
+  enterCount[zone] = 0;
+  document.getElementById('zone-' + zone).classList.remove('over');
+  const id = parseInt(e.dataTransfer.getData('text/plain'));
+  if (id) changeState(id, zone);
+  dragged = null;
+}
+
+function changeState(id, newState) {
+  const idea = ideas.find(i => i.id === id);
+  if (!idea || idea.state === newState) return;
+
+  // Find the card DOM element and animate it out first
+  const cardEl = document.querySelector('.card[data-id="' + id + '"]');
+  const animClass = newState === 'pursuing' ? 'anim-revive' : 'anim-bury';
+
+  if (cardEl) {
+    // Play exit animation on current card
+    const exitClass = newState === 'pursuing' ? 'anim-bury' : 'anim-bury';
+    cardEl.style.animation = newState === 'pursuing'
+      ? 'buryOut .3s ease forwards'
+      : 'buryOut .3s ease forwards';
+
+    setTimeout(() => {
+      // Commit state change after exit animation
+      idea.state = newState;
+      if (newState === 'pursuing') {
+        idea.kill = '';
+        idea.score = 0;
+      } else {
+        if (!idea.score || idea.score === 0) idea.score = 5;
+      }
+      save(); render();
+
+      // Find the newly rendered card and play enter animation
+      const newCard = document.querySelector('.card[data-id="' + id + '"]');
+      if (newCard) {
+        newCard.style.animation = newState === 'pursuing'
+          ? 'reviveIn .45s cubic-bezier(.22,1,.36,1) forwards'
+          : 'reviveIn .45s cubic-bezier(.22,1,.36,1) forwards';
+        // Also flash the destination zone
+        const zoneId = 'zone-' + newState;
+        const zone = document.getElementById(zoneId);
+        if (zone) {
+          zone.style.transition = 'background .1s';
+          zone.style.background = newState === 'pursuing'
+            ? 'rgba(29,158,117,0.1)'
+            : 'rgba(180,80,80,0.07)';
+          setTimeout(() => { zone.style.background = ''; }, 500);
+        }
+      }
+      if (newState === 'pursuing') { showRevive(); } else { showRIP(); }
+    }, 280);
+  } else {
+    // Fallback if no DOM element found
+    idea.state = newState;
+    if (newState === 'pursuing') { idea.kill = ''; idea.score = 0; }
+    else if (!idea.score || idea.score === 0) idea.score = 5;
+    save(); render();
+    if (newState === 'pursuing') { showRevive(); } else { showRIP(); }
+  }
+}
+
+// ── Toast ──
+
+function showRevive() {
+  const overlay = document.createElement('div');
+  overlay.className = 'rip-overlay';
+  const sparks = ['✦','★','✧','⚡','✦','★'].map((s,i) => {
+    const x = 16 + i * 28, y = Math.floor(Math.random() * 30);
+    return `<span class="spark" style="left:${x}px;top:${y}px;animation-delay:${(i*0.1).toFixed(1)}s">${s}</span>`;
+  }).join('');
+  overlay.innerHTML = `
+    <div class="revive-scene">
+      <div class="revive-sparks">${sparks}</div>
+      <div class="revive-figure">
+        <div class="revive-body">🧟</div>
+        <div class="revive-hand">✋</div>
+        <div class="revive-crack"></div>
+        <div class="revive-ground"></div>
+      </div>
+      <div class="revive-label">✦ rising from the graveyard</div>
+      <div class="revive-sublabel">this idea lives again</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const dismiss = () => {
+    if (overlay._gone) return;
+    overlay._gone = true;
+    overlay.classList.add('out');
+    setTimeout(() => overlay.remove(), 400);
+  };
+  overlay.addEventListener('click', dismiss);
+  setTimeout(dismiss, 2400);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function showRIP() {
+  const overlay = document.createElement('div');
+  overlay.className = 'rip-overlay';
+  overlay.innerHTML = `
+    <div class="rip-scene">
+      <div class="rip-ghost">👻</div>
+      <div class="rip-stone">
+        <svg width="130" height="140" viewBox="0 0 130 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="5" y="32" width="120" height="100" rx="8" fill="#1E1E1E" stroke="rgba(255,220,180,0.12)" stroke-width="1"/>
+          <ellipse cx="65" cy="32" rx="60" ry="28" fill="#1E1E1E" stroke="rgba(255,220,180,0.12)" stroke-width="1"/>
+          <rect x="61" y="14" width="8" height="28" rx="2" fill="rgba(255,220,180,0.15)"/>
+          <rect x="50" y="22" width="30" height="8" rx="2" fill="rgba(255,220,180,0.15)"/>
+          <text x="65" y="76" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="16" font-weight="500" fill="rgba(255,220,180,0.8)" letter-spacing="3">R.I.P</text>
+          <line x1="20" y1="88" x2="110" y2="88" stroke="rgba(255,220,180,0.1)" stroke-width="0.5"/>
+          <text x="65" y="103" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="8" fill="#666">idea buried</text>
+          <text x="65" y="117" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="7.5" fill="#555">gone but not forgotten</text>
+          <line x1="20" y1="126" x2="110" y2="126" stroke="rgba(255,220,180,0.07)" stroke-width="0.5"/>
+          <text x="65" y="137" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="6.5" fill="#444">revisit when the time is right</text>
+        </svg>
+      </div>
+      <div class="rip-dirt"></div>
+      <div class="rip-label">moved to the graveyard</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const dismiss = () => {
+    if (overlay._gone) return;
+    overlay._gone = true;
+    overlay.classList.add('out');
+    setTimeout(() => overlay.remove(), 400);
+  };
+  overlay.addEventListener('click', dismiss);
+  setTimeout(dismiss, 2200);
+}
+
+// ── Modal ──
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Add an idea';
+  document.getElementById('f-id').value = '';
+  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-year').value = new Date().getFullYear();
+  document.getElementById('f-score').value = 5;
+  document.getElementById('score-disp').textContent = '5';
+  document.getElementById('score-field').style.display = 'none';
+  document.getElementById('btn-bury').style.display = 'flex';
+  document.getElementById('btn-pursue').textContent = 'Pursue it →';
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function openEditModal(id) {
+  const idea = ideas.find(i => i.id === id);
+  if (!idea) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Edit idea';
+  document.getElementById('f-id').value = id;
+  document.getElementById('f-title').value = idea.title;
+  document.getElementById('f-hyp').value = idea.hyp || '';
+  document.getElementById('f-cat').value = idea.cat || '';
+  document.getElementById('f-year').value = idea.year;
+  document.getElementById('f-notes').value = idea.notes || '';
+  document.getElementById('f-link').value = idea.link || '';
+  document.getElementById('f-file').value = idea.file || '';
+  document.getElementById('f-score').value = idea.score || 5;
+  document.getElementById('score-disp').textContent = idea.score || 5;
+  document.getElementById('score-field').style.display = idea.state === 'buried' ? 'block' : 'none';
+  document.getElementById('btn-bury').style.display = idea.state === 'buried' ? 'flex' : 'none';
+  document.getElementById('btn-pursue').textContent = idea.state === 'buried' ? 'Move to pursuing' : 'Save changes';
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  document.getElementById('score-field').style.display = 'none';
+}
+
+function saveIdea(state) {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { document.getElementById('f-title').focus(); return; }
+  const score = parseInt(document.getElementById('f-score').value) || 5;
+  const data = {
+    title,
+    hyp: document.getElementById('f-hyp').value.trim(),
+    cat: document.getElementById('f-cat').value.trim() || 'Uncategorized',
+    year: parseInt(document.getElementById('f-year').value) || new Date().getFullYear(),
+    notes: document.getElementById('f-notes').value.trim(),
+    link: document.getElementById('f-link').value.trim(),
+    file: document.getElementById('f-file').value.trim(),
+    score: state === 'buried' ? score : 0,
+    kill: state === 'buried' ? (document.getElementById('f-notes').value.trim() || '') : '',
+    state,
+  };
+  if (editingId) {
+    const idx = ideas.findIndex(i => i.id === editingId);
+    if (idx > -1) ideas[idx] = { ...ideas[idx], ...data };
+  } else {
+    ideas.unshift({ id: Date.now(), ...data, created: Date.now() });
+    showToast('✦ Idea added');
+  }
+  save(); closeModal(); render();
+}
+
+// ── Drawer ──
+function openDrawer(id) {
+  const idea = ideas.find(i => i.id === id);
+  if (!idea) return;
+  document.getElementById('d-title').textContent = idea.title;
+
+  const chips = [];
+  if (idea.cat) chips.push(`<span class="chip">${idea.cat}</span>`);
+  chips.push(`<span class="chip" style="font-family:var(--mono)">${idea.year}</span>`);
+  if (idea.state === 'pursuing') chips.push(`<span class="badge badge-pursuing" style="font-size:10px">pursuing</span>`);
+  else chips.push(`<span class="badge badge-${scoreClass(idea.score)}" style="font-size:10px">${scoreBadge(idea.score)}</span>`);
+  document.getElementById('d-chips').innerHTML = chips.join('');
+
+  function sec(id, val) {
+    document.getElementById(id).style.display = val ? 'block' : 'none';
+  }
+
+  sec('d-hyp-sec', idea.hyp);
+  if (idea.hyp) document.getElementById('d-hyp').textContent = idea.hyp;
+
+  sec('d-notes-sec', idea.notes);
+  if (idea.notes) document.getElementById('d-notes').textContent = idea.notes;
+
+  sec('d-kill-sec', idea.kill && idea.state === 'buried');
+  if (idea.kill) document.getElementById('d-kill').textContent = idea.kill;
+
+  sec('d-score-sec', idea.state === 'buried');
+  document.getElementById('d-score-fill').style.width = (idea.score * 10) + '%';
+  document.getElementById('d-score-text').textContent = idea.score + '/10';
+
+  const isHot = idea.state === 'buried' && idea.score >= 7;
+  sec('d-hot-sec', isHot);
+  if (isHot) {
+    const reasonEl = document.getElementById('d-hot-reason');
+    const loadingEl = document.getElementById('d-hot-loading');
+    reasonEl.textContent = '';
+    loadingEl.style.display = 'block';
+
+    fetch('/api/insight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: idea.title,
+        cat: idea.cat,
+        year: idea.year,
+        score: idea.score,
+        kill: idea.kill,
+        hyp: idea.hyp,
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      loadingEl.style.display = 'none';
+      if (data.insight) {
+        reasonEl.textContent = data.insight;
+      } else {
+        reasonEl.textContent = 'Could not generate insight right now. Check your GROQ_API_KEY is set in Vercel.';
+        reasonEl.style.opacity = '.5';
+      }
+    })
+    .catch(() => {
+      loadingEl.style.display = 'none';
+      reasonEl.textContent = 'Insight unavailable — running locally without the API endpoint.';
+      reasonEl.style.opacity = '.5';
+    });
+  }
+
+  sec('d-link-sec', idea.link);
+  if (idea.link) {
+    const a = document.getElementById('d-link');
+    a.href = idea.link;
+    a.textContent = '↗ ' + idea.link.replace(/^https?:\/\//, '').slice(0, 45);
+  }
+
+  sec('d-file-sec', idea.file);
+  if (idea.file) document.getElementById('d-file').textContent = '📎 ' + idea.file;
+
+  const actions = document.getElementById('d-actions');
+  actions.innerHTML = '';
+  const editBtn = document.createElement('button');
+  editBtn.className = 'act'; editBtn.textContent = 'Edit';
+  editBtn.onclick = () => { closeDrawer(); openEditModal(id); };
+  actions.appendChild(editBtn);
+
+  const stateBtn = document.createElement('button');
+  if (idea.state === 'pursuing') {
+    stateBtn.className = 'act act-bury'; stateBtn.textContent = '🪦 Bury it';
+    stateBtn.onclick = () => { closeDrawer(); changeState(id, 'buried'); };
+  } else {
+    stateBtn.className = 'act act-revive'; stateBtn.textContent = '↑ Revive to pursuing';
+    stateBtn.onclick = () => { closeDrawer(); changeState(id, 'pursuing'); };
+  }
+  actions.appendChild(stateBtn);
+
+  document.getElementById('drawer-bg').style.display = 'block';
+  setTimeout(() => document.getElementById('drawer').classList.add('open'), 10);
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  setTimeout(() => document.getElementById('drawer-bg').style.display = 'none', 260);
+}
+
+// ── Tabs ──
+function setTab(tab, btn) {
+  activeTab = tab;
+  activeStatFilter = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  // Clear stat card highlights
+  ['all','pursuing','buried','hot'].forEach(f => {
+    const el = document.getElementById('stat-' + f);
+    if (el) el.classList.remove('active');
+  });
+  const statId = { all: 'stat-all', pursuing: 'stat-pursuing', buried: 'stat-buried' }[tab];
+  if (statId) document.getElementById(statId)?.classList.add('active');
+  render();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeDrawer(); } });
+
+render();
+</script>
+</body>
+</html>

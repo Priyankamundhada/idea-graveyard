@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/insight.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}
