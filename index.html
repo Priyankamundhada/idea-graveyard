@@ -570,19 +570,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Delete Confirm Modal -->
-<div id="delete-modal-bg" class="delete-modal-bg" style="display:none" onclick="if(event.target===this)closeDeleteModal()">
-  <div class="delete-modal">
-    <div class="delete-modal-icon">🗑️</div>
-    <div class="delete-modal-title">Delete this idea?</div>
-    <div class="delete-modal-sub">This can't be undone. The idea will be permanently removed from your graveyard.</div>
-    <div class="delete-modal-idea" id="delete-modal-idea"></div>
-    <div class="delete-modal-btns">
-      <button class="delete-cancel" onclick="closeDeleteModal()">Keep it</button>
-      <button class="delete-confirm" id="delete-modal-confirm">Yes, delete</button>
-    </div>
+<!-- Delete Confirm Dialog -->
+<dialog id="delete-dialog">
+  <div class="delete-modal-icon">🗑️</div>
+  <div class="delete-modal-title">Delete this idea?</div>
+  <div class="delete-modal-sub">This can't be undone. The idea will be permanently removed from your graveyard.</div>
+  <div class="delete-modal-idea" id="delete-modal-idea"></div>
+  <div class="delete-modal-btns">
+    <button class="delete-cancel" onclick="closeDeleteModal()">Keep it</button>
+    <button class="delete-confirm" id="delete-modal-confirm">Yes, delete</button>
   </div>
-</div>
+</dialog>
 
 <script>
 // ── Streak: track real visit days in localStorage ──
@@ -919,17 +917,16 @@ function showDeleteConfirm(id) {
   if (!idea) return;
 
   document.getElementById('delete-modal-idea').textContent = '"' + idea.title + '"';
-  document.getElementById('delete-modal-bg').style.display = 'flex';
-
   document.getElementById('delete-modal-confirm').onclick = () => {
     ideas = ideas.filter(i => i.id !== id);
     save(); closeDeleteModal(); closeDrawer(); render();
     showToast('Idea deleted');
   };
+  document.getElementById('delete-dialog').showModal();
 }
 
 function closeDeleteModal() {
-  document.getElementById('delete-modal-bg').style.display = 'none';
+  document.getElementById('delete-dialog').close();
 }
 
 function showToast(msg) {
