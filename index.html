@@ -60,14 +60,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
 .stat-label{font-family:var(--mono);font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
 .stat-num{font-family:var(--mono);font-size:26px;font-weight:500}
 
-/* ── BANNER ── */
-.banner{
-  background:var(--teal-dim);border:0.5px solid rgba(29,158,117,0.25);
-  border-radius:10px;padding:11px 16px;margin-bottom:18px;
-  display:flex;align-items:center;gap:9px;
-  font-size:13px;color:var(--teal-light);
-}
-
 /* ── STREAK ── */
 .streak{display:flex;align-items:center;gap:14px;margin-bottom:20px}
 .streak-label{font-family:var(--mono);font-size:10px;color:var(--text3)}
@@ -333,6 +325,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
   margin-top:auto;padding-top:16px;
   border-top:0.5px solid rgba(255,255,255,0.07);
 }
+.btn-delete{
+  margin-left:auto;
+  font-size:11px;padding:4px 10px;border-radius:5px;
+  border:0.5px solid rgba(200,60,60,0.2);
+  background:transparent;color:rgba(232,136,136,0.5);
+  cursor:pointer;font-family:var(--sans);transition:all .15s;
+}
+.btn-delete:hover{border-color:rgba(200,60,60,0.45);color:#E88888;background:rgba(200,60,60,0.08)}
+/* confirm delete state */
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
 /* ── TOAST ── */
 .toast{
@@ -437,11 +440,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
     <div class="stat" id="stat-pursuing" onclick="setStatFilter('pursuing')"><div class="stat-label">Pursuing</div><div class="stat-num" id="s-pursuing">0</div></div>
     <div class="stat" id="stat-buried" onclick="setStatFilter('buried')"><div class="stat-label">Buried</div><div class="stat-num" id="s-buried">0</div></div>
     <div class="stat" id="stat-hot" onclick="setStatFilter('hot')"><div class="stat-label">Hot 🔥</div><div class="stat-num" id="s-hot">0</div></div>
-  </div>
-
-  <!-- Banner -->
-  <div class="banner" id="banner" style="display:none">
-    <span>✦</span><span id="banner-text"></span>
   </div>
 
   <!-- Streak -->
@@ -691,15 +689,6 @@ function render() {
   document.getElementById('s-pursuing').textContent = ideas.filter(i=>i.state==='pursuing').length;
   document.getElementById('s-buried').textContent = ideas.filter(i=>i.state==='buried').length;
   document.getElementById('s-hot').textContent = ideas.filter(i=>i.state==='buried'&&i.score>=8).length;
-
-  // banner
-  const hot = ideas.filter(i=>i.state==='buried'&&i.score>=7).length;
-  const banner = document.getElementById('banner');
-  if (hot > 0) {
-    banner.style.display = 'flex';
-    document.getElementById('banner-text').textContent = `${hot} buried idea${hot>1?'s':''} scored 7+ — market timing may have shifted since you killed ${hot>1?'them':'it'}.`;
-  } else { banner.style.display = 'none'; }
-
   // category select
   const catSel = document.getElementById('filter-cat');
   const prev = catSel.value;
@@ -910,6 +899,35 @@ function showRevive() {
   setTimeout(dismiss, 2400);
 }
 
+function showDeleteConfirm(id) {
+  const idea = ideas.find(i => i.id === id);
+  if (!idea) return;
+
+  const bg = document.createElement('div');
+  bg.className = 'delete-modal-bg';
+  bg.innerHTML = `
+    <div class="delete-modal">
+      <div class="delete-modal-icon">🗑️</div>
+      <div class="delete-modal-title">Delete this idea?</div>
+      <div class="delete-modal-sub">This can't be undone. The idea will be permanently removed from your graveyard.</div>
+      <div class="delete-modal-idea">"${idea.title}"</div>
+      <div class="delete-modal-btns">
+        <button class="delete-cancel" id="del-cancel">Keep it</button>
+        <button class="delete-confirm" id="del-confirm">Yes, delete</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(bg);
+
+  document.getElementById('del-cancel').onclick = () => bg.remove();
+  bg.onclick = (e) => { if (e.target === bg) bg.remove(); };
+  document.getElementById('del-confirm').onclick = () => {
+    ideas = ideas.filter(i => i.id !== id);
+    save(); bg.remove(); closeDrawer(); render();
+    showToast('Idea deleted');
+  };
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -1096,6 +1114,7 @@ function openDrawer(id) {
 
   const actions = document.getElementById('d-actions');
   actions.innerHTML = '';
+
   const editBtn = document.createElement('button');
   editBtn.className = 'act'; editBtn.textContent = 'Edit';
   editBtn.onclick = () => { closeDrawer(); openEditModal(id); };
@@ -1110,6 +1129,13 @@ function openDrawer(id) {
     stateBtn.onclick = () => { closeDrawer(); changeState(id, 'pursuing'); };
   }
   actions.appendChild(stateBtn);
+
+  // Delete button — opens confirmation modal
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'btn-delete';
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.onclick = () => showDeleteConfirm(id);
+  actions.appendChild(deleteBtn);
 
   document.getElementById('drawer-bg').style.display = 'block';
   setTimeout(() => document.getElementById('drawer').classList.add('open'), 10);
