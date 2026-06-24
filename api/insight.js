@@ -3,21 +3,44 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { title, cat, year, score, kill, hyp } = req.body;
+  const { title, cat, year, kill, hyp, notes, action } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: 'Missing idea title' });
   }
 
-  const prompt = `A founder buried this startup idea in ${year}:
+  let prompt;
+
+  if (action === 'score') {
+    // Called when burying — score the idea and optionally explain why it might be hot
+    prompt = `You are a sharp startup analyst. A founder is burying this idea:
+
+Title: "${title}"
+Category: ${cat || 'Unknown'}
+Year: ${year || new Date().getFullYear()}
+Hypothesis: ${hyp || 'Not provided'}
+Notes: ${notes || 'None'}
+Why they killed it: "${kill || 'No reason given'}"
+
+Score this idea's CURRENT market relevance from 1-10 based on:
+- How much the market, technology, or timing has shifted since it was buried
+- Whether the kill reason is still valid today
+- The strength of the underlying insight
+
+Respond ONLY with valid JSON in this exact format, nothing else:
+{"score": 7, "reason": "2-3 sentence explanation of why this score, referencing specific market shifts"}`;
+
+  } else {
+    // Called when opening drawer on a hot idea
+    prompt = `A founder buried this startup idea in ${year}:
 
 Title: "${title}"
 Category: ${cat || 'Unknown'}
 Hypothesis: ${hyp || 'Not specified'}
 Why they killed it: "${kill || 'No reason recorded'}"
-Relevance score today: ${score}/10
 
-In 2-3 sentences, explain specifically why the timing or market conditions might be better for this idea now compared to when it was buried. Be concrete — mention real shifts in technology, regulation, consumer behavior, or infrastructure that are relevant to this specific idea. Do not be generic.`;
+In 2-3 sentences, explain specifically why the timing or market conditions might be better for this idea now. Be concrete — mention real shifts in technology, regulation, consumer behavior, or infrastructure relevant to this idea. Do not be generic.`;
+  }
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -28,12 +51,12 @@ In 2-3 sentences, explain specifically why the timing or market conditions might
       },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
-        max_tokens: 200,
+        max_tokens: 300,
         temperature: 0.7,
         messages: [
           {
             role: 'system',
-            content: 'You are a sharp startup analyst who helps founders identify when their previously abandoned ideas have become relevant again due to market shifts. Be specific and concise. No fluff.'
+            content: 'You are a sharp startup analyst. Be specific and concise. No fluff.'
           },
           {
             role: 'user',
@@ -46,13 +69,29 @@ In 2-3 sentences, explain specifically why the timing or market conditions might
     if (!response.ok) {
       const err = await response.json();
       console.error('Groq error:', err);
-      return res.status(500).json({ error: 'Groq API error', detail: err });
+      return res.status(500).json({ error: 'Groq API error' });
     }
 
     const data = await response.json();
-    const insight = data.choices?.[0]?.message?.content?.trim();
+    const text = data.choices?.[0]?.message?.content?.trim();
 
-    return res.status(200).json({ insight });
+    if (action === 'score') {
+      try {
+        const parsed = JSON.parse(text);
+        return res.status(200).json({ score: parsed.score, reason: parsed.reason });
+      } catch (e) {
+        // Fallback if JSON parsing fails
+        const scoreMatch = text.match(/"score":\s*(\d+)/);
+        const reasonMatch = text.match(/"reason":\s*"([^"]+)"/);
+        return res.status(200).json({
+          score: scoreMatch ? parseInt(scoreMatch[1]) : 5,
+          reason: reasonMatch ? reasonMatch[1] : text
+        });
+      }
+    } else {
+      return res.status(200).json({ insight: text });
+    }
+
   } catch (err) {
     console.error('Handler error:', err);
     return res.status(500).json({ error: 'Internal server error' });
