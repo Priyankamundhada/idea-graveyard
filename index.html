@@ -903,8 +903,13 @@ function showDeleteConfirm(id) {
   const idea = ideas.find(i => i.id === id);
   if (!idea) return;
 
+  // Prevent duplicates
+  const existing = document.getElementById('delete-modal-bg');
+  if (existing) existing.remove();
+
   const bg = document.createElement('div');
   bg.className = 'delete-modal-bg';
+  bg.id = 'delete-modal-bg';
   bg.innerHTML = `
     <div class="delete-modal">
       <div class="delete-modal-icon">🗑️</div>
@@ -917,6 +922,7 @@ function showDeleteConfirm(id) {
       </div>
     </div>`;
 
+  // Append to document body with fixed positioning — works correctly in browser
   document.body.appendChild(bg);
 
   document.getElementById('del-cancel').onclick = () => bg.remove();
