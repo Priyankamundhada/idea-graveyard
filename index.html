@@ -570,17 +570,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Delete Confirm Dialog -->
-<dialog id="delete-dialog">
-  <div class="delete-modal-icon">🗑️</div>
-  <div class="delete-modal-title">Delete this idea?</div>
-  <div class="delete-modal-sub">This can't be undone. The idea will be permanently removed from your graveyard.</div>
-  <div class="delete-modal-idea" id="delete-modal-idea"></div>
-  <div class="delete-modal-btns">
-    <button class="delete-cancel" onclick="closeDeleteModal()">Keep it</button>
-    <button class="delete-confirm" id="delete-modal-confirm">Yes, delete</button>
-  </div>
-</dialog>
+
 
 <script>
 // ── Streak: track real visit days in localStorage ──
@@ -913,20 +903,9 @@ function showRevive() {
 }
 
 function showDeleteConfirm(id) {
-  const idea = ideas.find(i => i.id === id);
-  if (!idea) return;
-
-  document.getElementById('delete-modal-idea').textContent = '"' + idea.title + '"';
-  document.getElementById('delete-modal-confirm').onclick = () => {
-    ideas = ideas.filter(i => i.id !== id);
-    save(); closeDeleteModal(); closeDrawer(); render();
-    showToast('Idea deleted');
-  };
-  document.getElementById('delete-dialog').showModal();
-}
-
-function closeDeleteModal() {
-  document.getElementById('delete-dialog').close();
+  ideas = ideas.filter(i => i.id !== id);
+  save(); closeDrawer(); render();
+  showToast('Idea deleted');
 }
 
 function showToast(msg) {
