@@ -569,6 +569,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Delete Confirm Modal -->
+<div id="delete-modal-bg" class="delete-modal-bg" style="display:none" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="delete-modal">
+    <div class="delete-modal-icon">🗑️</div>
+    <div class="delete-modal-title">Delete this idea?</div>
+    <div class="delete-modal-sub">This can't be undone. The idea will be permanently removed from your graveyard.</div>
+    <div class="delete-modal-idea" id="delete-modal-idea"></div>
+    <div class="delete-modal-btns">
+      <button class="delete-cancel" onclick="closeDeleteModal()">Keep it</button>
+      <button class="delete-confirm" id="delete-modal-confirm">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── Streak: track real visit days in localStorage ──
 function initStreak() {
@@ -903,35 +917,18 @@ function showDeleteConfirm(id) {
   const idea = ideas.find(i => i.id === id);
   if (!idea) return;
 
-  // Prevent duplicates
-  const existing = document.getElementById('delete-modal-bg');
-  if (existing) existing.remove();
+  document.getElementById('delete-modal-idea').textContent = '"' + idea.title + '"';
+  document.getElementById('delete-modal-bg').style.display = 'flex';
 
-  const bg = document.createElement('div');
-  bg.className = 'delete-modal-bg';
-  bg.id = 'delete-modal-bg';
-  bg.innerHTML = `
-    <div class="delete-modal">
-      <div class="delete-modal-icon">🗑️</div>
-      <div class="delete-modal-title">Delete this idea?</div>
-      <div class="delete-modal-sub">This can't be undone. The idea will be permanently removed from your graveyard.</div>
-      <div class="delete-modal-idea">"${idea.title}"</div>
-      <div class="delete-modal-btns">
-        <button class="delete-cancel" id="del-cancel">Keep it</button>
-        <button class="delete-confirm" id="del-confirm">Yes, delete</button>
-      </div>
-    </div>`;
-
-  // Append to document body with fixed positioning — works correctly in browser
-  document.body.appendChild(bg);
-
-  document.getElementById('del-cancel').onclick = () => bg.remove();
-  bg.onclick = (e) => { if (e.target === bg) bg.remove(); };
-  document.getElementById('del-confirm').onclick = () => {
+  document.getElementById('delete-modal-confirm').onclick = () => {
     ideas = ideas.filter(i => i.id !== id);
-    save(); bg.remove(); closeDrawer(); render();
+    save(); closeDeleteModal(); closeDrawer(); render();
     showToast('Idea deleted');
   };
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-modal-bg').style.display = 'none';
 }
 
 function showToast(msg) {
