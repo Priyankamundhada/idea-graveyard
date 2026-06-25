@@ -787,7 +787,7 @@ function makeCard(idea) {
     : `<div class="card-kill">${idea.kill ? '"' + idea.kill.slice(0,90) + (idea.kill.length>90?'…':'') + '"' : '<span style="color:var(--text4)">No reason recorded</span>'}</div>`;
 
   const actionBtn = idea.state === 'pursuing'
-    ? `<button class="act act-validate" onclick="event.stopPropagation();validateIdea(${idea.id})">✦ Validate</button><button class="act act-bury">🪦 Bury</button>`
+    ? `<button class="act act-bury">🪦 Bury</button>`
     : `<button class="act act-revive">↑ Revive</button>`;
 
   // Health score for pursuing ideas
