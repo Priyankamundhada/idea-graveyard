@@ -815,7 +815,44 @@ function onDrop(e, zone) {
   dragged = null;
 }
 
-function changeState(id, newState) {
+function showKillPrompt(idea) {
+  return new Promise((resolve) => {
+    // Remove any existing
+    const existing = document.getElementById('kill-prompt-bg');
+    if (existing) existing.remove();
+
+    const bg = document.createElement('div');
+    bg.id = 'kill-prompt-bg';
+    bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+    bg.innerHTML = `
+      <div style="background:#141414;border:0.5px solid rgba(200,60,60,0.25);border-radius:14px;width:100%;max-width:380px;padding:24px">
+        <div style="font-size:15px;font-weight:500;color:#F5F2ED;margin-bottom:6px">🪦 Bury this idea?</div>
+        <div style="font-size:12px;color:#777;margin-bottom:14px">Why are you burying it? This helps the AI score its future relevance.</div>
+        <textarea id="kill-reason-input" rows="3" placeholder="Too early, no market, distraction, resource constrained..." style="width:100%;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:9px 12px;color:#F0EDE8;font-family:Inter,sans-serif;font-size:13px;outline:none;resize:none;box-sizing:border-box"></textarea>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button id="kill-cancel" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif;background:transparent;border:0.5px solid rgba(255,255,255,0.1);color:#AAA">Cancel</button>
+          <button id="kill-confirm" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif;background:rgba(200,60,60,0.15);border:0.5px solid rgba(200,60,60,0.4);color:#E88888">Bury it</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(bg);
+    document.getElementById('kill-reason-input').focus();
+
+    document.getElementById('kill-cancel').onclick = () => {
+      bg.remove();
+      idea._cancelBury = true;
+      resolve();
+    };
+    document.getElementById('kill-confirm').onclick = () => {
+      const reason = document.getElementById('kill-reason-input').value.trim();
+      idea.kill = reason || 'No reason recorded';
+      bg.remove();
+      resolve();
+    };
+  });
+}
+
+async function changeState(id, newState) {
   const idea = ideas.find(i => i.id === id);
   if (!idea || idea.state === newState) return;
 
@@ -838,9 +875,8 @@ function changeState(id, newState) {
         idea.score = 0;
       } else {
         // Ask for kill reason
-        const reason = prompt('Why are you burying this idea?\n(press Cancel to abort)', '');
-        if (reason === null) return;
-        idea.kill = reason.trim() || 'No reason recorded';
+        await showKillPrompt(idea);
+        if (idea._cancelBury) { delete idea._cancelBury; return; }
       }
       save(); render();
 
