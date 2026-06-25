@@ -851,7 +851,7 @@ function showKillPrompt(idea) {
   });
 }
 
-async async function changeState(id, newState) {
+function changeState(id, newState) {
   const idea = ideas.find(i => i.id === id);
   if (!idea || idea.state === newState) return;
 
@@ -874,8 +874,19 @@ async async function changeState(id, newState) {
         idea.score = 0;
       } else {
         // Ask for kill reason
-        await showKillPrompt(idea);
-        if (idea._cancelBury) { delete idea._cancelBury; return; }
+        showKillPrompt(idea).then(() => {
+          if (idea._cancelBury) { delete idea._cancelBury; return; }
+          idea.state = 'buried';
+          save(); render(); showRIP();
+          fetch('/api/insight', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: idea.title, cat: idea.cat, year: idea.year, kill: idea.kill, hyp: idea.hyp, notes: idea.notes, action: 'score' })
+          }).then(r => r.json()).then(data => {
+            if (data.score) { idea.score = data.score; idea.aiReason = data.reason || ''; save(); render(); }
+          }).catch(() => {});
+        });
+        return;
       }
       save(); render();
 
