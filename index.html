@@ -851,7 +851,7 @@ function showKillPrompt(idea) {
   });
 }
 
-async function changeState(id, newState) {
+async async function changeState(id, newState) {
   const idea = ideas.find(i => i.id === id);
   if (!idea || idea.state === newState) return;
 
