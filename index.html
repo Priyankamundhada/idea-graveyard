@@ -1003,13 +1003,11 @@ function showKillField() {
 function openAddModal() {
   editingId = null;
   editingState = null;
-  editingState = null;
   document.getElementById('modal-title').textContent = 'Add an idea';
   document.getElementById('f-id').value = '';
   ['f-title','f-hyp','f-cat','f-notes','f-link','f-file','f-kill'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   const kf = document.getElementById('kill-field'); if(kf) kf.style.display='none';
   const bb = document.getElementById('btn-bury'); if(bb) { bb.textContent='🪦 Bury it'; bb.onclick = showKillField; }
-  document.getElementById('f-year').value = new Date().getFullYear();
   document.getElementById('f-year').value = new Date().getFullYear();
 
   document.getElementById('btn-bury').style.display = 'flex';
