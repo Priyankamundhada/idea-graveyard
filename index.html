@@ -1140,16 +1140,16 @@ function showValidatePanel(id) {
     if (data.validation) {
       // Parse out the questions section
       const text = data.validation;
-      const qMatch = text.match(/\*\*3 Questions[^*]*\*\*([\s\S]*?)(?:\n\n|$)/);
-      const mainText = text.replace(/\*\*3 Questions[^*]*\*\*[\s\S]*$/, '').trim();
+      const qSplit = text.split(/\*?\*?3 Questions[^\n]*\n?/i);
+      const mainText = (qSplit[0] || text).trim();
+      const qText = qSplit[1] || "";
 
-      result.innerHTML = mainText
-        .replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#F0EDE8">$1</strong>')
-        .replace(/\n/g, '<br>');
+      result.innerHTML = mainText.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#F0EDE8">$1</strong>').replace(/\n/g, '<br>');
 
-      // Extract questions and make them answerable
+      const questions = qText.split(/\n/).map(l => l.trim()).filter(l => l.match(/^\d+[.)]/)).map(l => l.replace(/^\d+[.)]\s*/, "").replace(/\*\*([^*]+)\*\*/g, "$1"));
+      if (questions.length) {
+        const qMatch = true;
       if (qMatch) {
-        const questions = qMatch[1].trim().split(/\n\d+\./).filter(q => q.trim());
         if (questions.length) {
           qSection.style.display = 'flex';
           qSection.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:#B09EE8;margin-bottom:4px">ANSWER THESE TO STRENGTHEN YOUR IDEA</div>';
