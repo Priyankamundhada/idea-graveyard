@@ -22,13 +22,13 @@ Hypothesis: ${hyp || 'Not provided'}
 Notes: ${notes || 'None'}
 Why they killed it: "${kill || 'No reason given'}"
 
-Score this idea's CURRENT market relevance from 1-10 based on:
-- How much the market, technology, or timing has shifted since it was buried
-- Whether the kill reason is still valid today
-- The strength of the underlying insight
+Score this idea's CURRENT market relevance from 1-10:
+- 8-10 (Hot): Kill reason is no longer valid, market has shifted significantly
+- 5-7 (Warm): Some things have changed but key obstacles remain
+- 1-4 (Cold): Kill reason still fully valid, little has changed
 
-Respond ONLY with valid JSON in this exact format, nothing else:
-{"score": 7, "reason": "2-3 sentence explanation of why this score, referencing specific market shifts"}`;
+Respond ONLY with valid JSON, nothing else:
+{"score": 7, "reason": "2-3 sentences explaining exactly why this score — what has or hasn't changed in the market, technology, or timing since this was buried"}`;
 
   } else {
     // Called when opening drawer - works for both pursuing and buried ideas
@@ -41,7 +41,7 @@ Category: ${cat || 'Unknown'}
 Hypothesis: ${hyp || 'Not specified'}
 Notes: ${notes || 'None'}
 
-In 2-3 sentences, give sharp tactical advice on what to validate first and what the biggest risk is. Be specific and direct.`;
+In 2-3 sentences: (1) assess current market timing and demand signal, (2) identify the single biggest risk or assumption to validate first. Be specific, not generic.`;
     } else {
       prompt = `A founder buried this startup idea in ${year}:
 

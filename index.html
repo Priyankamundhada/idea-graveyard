@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="description" content="A founder's idea pipeline — bury ideas, pursue them, and get AI insights on when buried ideas become relevant again.">
+<meta name="theme-color" content="#0E0E0E">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Idea Graveyard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet"></noscript>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -516,14 +520,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
       <div class="field"><label>Link (Notion, Doc, Figma...)</label><input id="f-link" type="url" placeholder="https://notion.so/..." /></div>
       <div class="field"><label>Attachment name</label><input id="f-file" type="text" placeholder="deck-v2.pdf" /></div>
     </div>
-    
+    <div id="ai-scoring-status" style="display:none;font-family:var(--mono);font-size:10px;color:var(--teal-light);padding:8px 0;">
+      ✦ AI is scoring this idea...
+    </div>
     <input type="hidden" id="f-id" />
 
     <div class="modal-btns">
       <button class="btn-bury" id="btn-bury"
-        
+  
         onclick="saveIdea('buried')">🪦 Bury it</button>
-      <button class="btn-pursue" id="btn-pursue" onclick="saveIdea('pursuing')">Pursue it →</button>
+      <button class="btn-pursue" id="btn-pursue" onclick="saveIdea(null)">Pursue it →</button>
     </div>
   </div>
 </div>
@@ -550,7 +556,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
   <div id="d-hot-sec" style="display:none">
     <div style="background:rgba(29,158,117,0.1);border:0.5px solid rgba(29,158,117,0.25);border-radius:9px;padding:12px 14px;display:flex;flex-direction:column;gap:8px">
       <div style="font-family:var(--mono);font-size:9px;color:var(--teal-light);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;justify-content:space-between">
-        <span>Why this is hot now</span>
+        <span id='d-hot-label'>AI analysis</span>
         <span id="d-hot-loading" style="display:none;font-size:9px;color:var(--teal-light);opacity:.6">analysing...</span>
       </div>
       <div class="drawer-text" id="d-hot-reason" style="color:var(--teal-light);font-style:normal;line-height:1.6"></div>
@@ -628,7 +634,6 @@ initStreak();
 let activeTab = 'all';
 let activeStatFilter = 'all';
 let editingId = null;
-let editingState = null;
 let dragged = null;
 
 function loadIdeas() { try { return JSON.parse(localStorage.getItem('ig_ideas') || 'null'); } catch(e) { return null; } }
@@ -699,13 +704,13 @@ function render() {
   const pursuing = list.filter(i=>i.state==='pursuing');
   const buried = list.filter(i=>i.state==='buried');
 
-  if (!pursuing.length) { zp.innerHTML = '<div class="drag-hint">Drag a card here to pursue it — or hit + Add idea</div>'; }
+  if (!pursuing.length) { zp.innerHTML = '<div class="drag-hint">Your pursuing ideas will appear here — hit + Add idea to get started</div>'; }
   else {
     pursuing.forEach(i => zp.appendChild(makeCard(i)));
     const spP = document.createElement('div'); spP.className = 'zone-spacer'; zp.appendChild(spP);
   }
 
-  if (!buried.length) { zb.innerHTML = '<div class="drag-hint">Drag a card here to bury it</div>'; }
+  if (!buried.length) { zb.innerHTML = '<div class="drag-hint">Ideas you bury will rest here — drag a card over or hit Bury on a card</div>'; }
   else {
     buried.forEach(i => zb.appendChild(makeCard(i)));
     const spB = document.createElement('div'); spB.className = 'zone-spacer'; zb.appendChild(spB);
@@ -738,9 +743,12 @@ function makeCard(idea) {
     idea.file ? `<span class="chip chip-file">📎 ${idea.file}</span>` : '',
   ].filter(Boolean).join('');
 
+  const score = idea.score || 0;
   const badge = idea.state === 'pursuing'
     ? `<span class="badge badge-pursuing">pursuing</span>`
-    : `<span class="badge badge-${scoreClass(idea.score)}">${scoreBadge(idea.score)}</span>`;
+    : score === 0
+      ? `<span class="badge badge-cold">🧊 Cold</span>`
+      : `<span class="badge badge-${scoreClass(score)}">${scoreBadge(score)}</span>`;
 
   const body = idea.state === 'pursuing'
     ? `<div class="card-note">${(idea.hyp||idea.notes||'').slice(0,90)}${(idea.hyp||idea.notes||'').length>90?'…':''}</div>`
@@ -939,11 +947,13 @@ function showRIP() {
 // ── Modal ──
 function openAddModal() {
   editingId = null;
+  editingState = null;
   document.getElementById('modal-title').textContent = 'Add an idea';
   document.getElementById('f-id').value = '';
-  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file'].forEach(id => document.getElementById(id).value = '');
+  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('f-year').value = new Date().getFullYear();
-  
+  document.getElementById('f-year').value = new Date().getFullYear();
+
   document.getElementById('btn-bury').style.display = 'flex';
   document.getElementById('btn-pursue').textContent = 'Pursue it →';
   document.getElementById('modal-overlay').style.display = 'flex';
@@ -963,22 +973,24 @@ function openEditModal(id) {
   document.getElementById('f-notes').value = idea.notes || '';
   document.getElementById('f-link').value = idea.link || '';
   document.getElementById('f-file').value = idea.file || '';
-  
+
   document.getElementById('btn-bury').style.display = 'none';
   document.getElementById('btn-pursue').textContent = 'Save changes';
+  document.getElementById('btn-pursue').setAttribute('onclick', 'saveIdea()');
   document.getElementById('modal-overlay').style.display = 'flex';
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').style.display = 'none';
-  
 }
+
+let editingState = null;
 
 async function saveIdea(state) {
   const resolvedState = editingId ? editingState : (state || 'pursuing');
   const title = document.getElementById('f-title').value.trim();
   if (!title) { document.getElementById('f-title').focus(); return; }
-  const score = 0;
+
   const data = {
     title,
     hyp: document.getElementById('f-hyp').value.trim(),
@@ -987,16 +999,44 @@ async function saveIdea(state) {
     notes: document.getElementById('f-notes').value.trim(),
     link: document.getElementById('f-link').value.trim(),
     file: document.getElementById('f-file').value.trim(),
-    score: state === 'buried' ? score : 0,
-    kill: state === 'buried' ? (document.getElementById('f-notes').value.trim() || '') : '',
-    state,
+    score: 0,
+    aiReason: '',
+    state: resolvedState,
   };
+
+  if (resolvedState === 'buried' && !editingId) {
+    // Show loading state
+    const statusEl = document.getElementById('ai-scoring-status');
+    if (statusEl) statusEl.style.display = 'block';
+    document.querySelector('.btn-bury').disabled = true;
+    document.querySelector('.btn-pursue').disabled = true;
+
+    try {
+      const resp = await fetch('/api/insight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, action: 'score' })
+      });
+      const result = await resp.json();
+      data.score = result.score || 0;
+      data.aiReason = result.reason || '';
+    } catch (e) {
+      data.score = 0;
+    }
+
+    if (statusEl) statusEl.style.display = 'none';
+    document.querySelector('.btn-bury').disabled = false;
+    document.querySelector('.btn-pursue').disabled = false;
+  }
+
   if (editingId) {
     const idx = ideas.findIndex(i => i.id === editingId);
     if (idx > -1) ideas[idx] = { ...ideas[idx], ...data };
+    editingId = null; editingState = null;
   } else {
     ideas.unshift({ id: Date.now(), ...data, created: Date.now() });
-    showToast('✦ Idea added');
+    if (resolvedState === 'pursuing') showToast('✦ Idea added');
+    else showToast('🪦 Buried with AI score: ' + data.score + '/10');
   }
   save(); closeModal(); render();
 }
@@ -1031,41 +1071,52 @@ function openDrawer(id) {
   document.getElementById('d-score-fill').style.width = (idea.score * 10) + '%';
   document.getElementById('d-score-text').textContent = idea.score + '/10';
 
-  const isHot = idea.state === 'buried' && idea.score >= 7;
-  sec('d-hot-sec', isHot);
-  if (isHot) {
+  const isHot = true; // Show AI analysis for all ideas
+  sec('d-hot-sec', true);
+  // Set label based on score
+  const scoreLabel = document.getElementById('d-hot-label');
+  if (scoreLabel) {
+    if (idea.state === 'pursuing') scoreLabel.textContent = 'AI analysis';
+    else if (idea.score >= 8) scoreLabel.textContent = 'Why this is 🔥 Hot';
+    else if (idea.score >= 5) scoreLabel.textContent = 'Why this is 🌤 Warm';
+    else if (idea.score > 0) scoreLabel.textContent = 'Why this is 🧊 Cold';
+    else scoreLabel.textContent = 'AI analysis';
+  }
+  if (true) {
     const reasonEl = document.getElementById('d-hot-reason');
     const loadingEl = document.getElementById('d-hot-loading');
-    reasonEl.textContent = '';
-    loadingEl.style.display = 'block';
+    reasonEl.style.opacity = '1';
 
-    fetch('/api/insight', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: idea.title,
-        cat: idea.cat,
-        year: idea.year,
-        score: idea.score,
-        kill: idea.kill,
-        hyp: idea.hyp,
+    // Use stored AI reason if available
+    if (idea.aiReason) {
+      loadingEl.style.display = 'none';
+      reasonEl.textContent = idea.aiReason;
+    } else {
+      reasonEl.textContent = '';
+      loadingEl.style.display = 'block';
+      fetch('/api/insight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: idea.title, cat: idea.cat, year: idea.year, score: idea.score, kill: idea.kill, hyp: idea.hyp, notes: idea.notes, state: idea.state })
       })
-    })
-    .then(r => r.json())
-    .then(data => {
-      loadingEl.style.display = 'none';
-      if (data.insight) {
-        reasonEl.textContent = data.insight;
-      } else {
-        reasonEl.textContent = 'Could not generate insight right now. Check your GROQ_API_KEY is set in Vercel.';
+      .then(r => r.json())
+      .then(data => {
+        loadingEl.style.display = 'none';
+        if (data.insight) {
+          reasonEl.textContent = data.insight;
+          idea.aiReason = data.insight;
+          save();
+        } else {
+          reasonEl.textContent = 'Could not generate insight. Check GROQ_API_KEY in Vercel.';
+          reasonEl.style.opacity = '.5';
+        }
+      })
+      .catch(() => {
+        loadingEl.style.display = 'none';
+        reasonEl.textContent = 'Insight unavailable — API not reachable.';
         reasonEl.style.opacity = '.5';
-      }
-    })
-    .catch(() => {
-      loadingEl.style.display = 'none';
-      reasonEl.textContent = 'Insight unavailable — running locally without the API endpoint.';
-      reasonEl.style.opacity = '.5';
-    });
+      });
+    }
   }
 
   sec('d-link-sec', idea.link);
@@ -1132,7 +1183,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal
 
 render();
 </script>
-<footer style="text-align:center;padding:20px 20px 28px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#444;letter-spacing:.08em">
+<footer style="text-align:center;padding:20px 20px 28px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#666;letter-spacing:.08em">
   made by priyanka mundhada
 </footer>
 </body>
