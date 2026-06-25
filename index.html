@@ -574,7 +574,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
     <button class="modal-close" onclick="closeDrawer()">×</button>
   </div>
   <div id="d-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-  <div id="d-health-sec" style="display:none;margin-bottom:12px"><div class="drawer-label">Idea health</div><div id="d-health-content" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div></div>
+
+  <div id="d-health-sec" style="display:none;margin-bottom:12px">
+    <div class="drawer-label">Idea health</div>
+    <div id="d-health-content" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
+  </div>
   <div id="d-hyp-sec" style="display:none"><div class="drawer-label">Hypothesis</div><div class="drawer-text" id="d-hyp"></div></div>
   <div class="drawer-divider"></div>
   <div id="d-notes-sec" style="display:none"><div class="drawer-label">Notes</div><div class="drawer-text" id="d-notes"></div></div>
@@ -667,7 +671,6 @@ initStreak();
 let activeTab = 'all';
 let activeStatFilter = 'all';
 let editingId = null;
-let editingState = null;
 let dragged = null;
 
 function loadIdeas() { try { return JSON.parse(localStorage.getItem('ig_ideas') || 'null'); } catch(e) { return null; } }
@@ -1052,7 +1055,7 @@ function showRIP() {
   setTimeout(dismiss, 2200);
 }
 
-// ── Modal ──
+
 function showValidatePanel(id) {
   const idea = ideas.find(i => i.id === id);
   if (!idea) return;
@@ -1061,86 +1064,95 @@ function showValidatePanel(id) {
   const panel = document.createElement('div');
   panel.id = 'validate-panel';
   panel.style.cssText = 'border:0.5px solid rgba(120,80,220,0.25);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:8px';
-  panel.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:#B09EE8;text-transform:uppercase">Validate with AI</div>'
+  panel.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:#B09EE8;text-transform:uppercase;letter-spacing:.08em">Validate with AI</div>'
     + '<div id="validate-result" style="font-size:12px;color:#AAA;line-height:1.7">Analysing...</div>'
     + '<div id="validate-q-section" style="display:none;flex-direction:column;gap:8px"></div>'
     + '<button id="validate-submit-btn" style="display:none;padding:8px;border-radius:7px;background:rgba(120,80,220,0.15);border:0.5px solid rgba(120,80,220,0.3);color:#B09EE8;font-size:12px;cursor:pointer">Re-analyse with my answers</button>';
   const da = document.getElementById('d-actions');
   da.parentNode.insertBefore(panel, da);
-  fetch('/api/insight', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:idea.title,cat:idea.cat,year:idea.year,hyp:idea.hyp,notes:idea.notes,state:idea.state,action:'validate'})
-  }).then(r=>r.json()).then(data=>{
-    const res=document.getElementById('validate-result');
-    const qSec=document.getElementById('validate-q-section');
-    const sub=document.getElementById('validate-submit-btn');
-    if(!res) return;
-    if(data.validation){
-      const txt=data.validation;
-      res.innerHTML=txt.split('**').map((p,i)=>i%2===1?'<strong style="color:#F0EDE8">'+p+'</strong>':p).join('').split('\n').join('<br>');
-      const qs=txt.split('\n').map(l=>l.trim()).filter(l=>l.length>2&&l[0]>='1'&&l[0]<='9'&&(l[1]==='.'||l[1]===')')).map(l=>l.slice(2).trim().split('**').join(''));
-      if(qs.length>0&&qSec&&sub){
-        qSec.style.display='flex';
-        qSec.innerHTML='<div style="font-family:monospace;font-size:9px;color:#B09EE8;margin-bottom:4px">ANSWER TO STRENGTHEN</div>';
-        qs.forEach((q,i)=>{
-          const d=document.createElement('div');
-          d.style.cssText='display:flex;flex-direction:column;gap:4px';
-          d.innerHTML='<label style="font-size:11px;color:#AAA">'+(i+1)+'. '+q+'</label>'+'<textarea id="va-'+i+'" rows="2" placeholder="Your answer..." style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:6px;padding:7px 10px;color:#F0EDE8;font-size:12px;outline:none;resize:none;width:100%;box-sizing:border-box"></textarea>';
+  fetch('/api/insight', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({title: idea.title, cat: idea.cat, year: idea.year, hyp: idea.hyp, notes: idea.notes, state: idea.state, action: 'validate'})
+  }).then(r => r.json()).then(data => {
+    const res = document.getElementById('validate-result');
+    const qSec = document.getElementById('validate-q-section');
+    const sub = document.getElementById('validate-submit-btn');
+    if (!res) return;
+    if (data.validation) {
+      const txt = data.validation;
+      res.innerHTML = txt.split('**').map((p,i) => i%2===1 ? '<strong style="color:#F0EDE8">'+p+'</strong>' : p).join('').split('\n').join('<br>');
+      const qs = txt.split('\n').map(l => l.trim()).filter(l => l.length > 2 && l[0] >= '1' && l[0] <= '9' && (l[1]==='.' || l[1]===')')).map(l => l.slice(2).trim().split('**').join(''));
+      if (qs.length > 0 && qSec && sub) {
+        qSec.style.display = 'flex';
+        qSec.innerHTML = '<div style="font-family:monospace;font-size:9px;color:#B09EE8;margin-bottom:4px">ANSWER TO STRENGTHEN</div>';
+        qs.forEach((q,i) => {
+          const d = document.createElement('div');
+          d.style.cssText = 'display:flex;flex-direction:column;gap:4px';
+          d.innerHTML = '<label style="font-size:11px;color:#AAA">'+(i+1)+'. '+q+'</label>'+'<textarea id="va-'+i+'" rows="2" placeholder="Your answer..." style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:6px;padding:7px 10px;color:#F0EDE8;font-size:12px;outline:none;resize:none;width:100%;box-sizing:border-box"></textarea>';
           qSec.appendChild(d);
         });
-        sub.style.display='block';
-        sub.onclick=()=>{
-          const ans=qs.map((q,i)=>{const el=document.getElementById('va-'+i);return el&&el.value.trim()?(i+1)+'. '+q+'\nAnswer: '+el.value.trim():'';}).filter(Boolean).join('\n');
-          const nn=(idea.notes||'')+'\n\nValidation:\n'+ans;
-          res.innerHTML='Re-analysing...'; sub.disabled=true;
-          fetch('/api/insight',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:idea.title,cat:idea.cat,year:idea.year,hyp:idea.hyp,notes:nn,state:idea.state,action:'validate'})
+        sub.style.display = 'block';
+        sub.onclick = () => {
+          const ans = qs.map((q,i) => { const el = document.getElementById('va-'+i); return el && el.value.trim() ? (i+1)+'. '+q+'\nAnswer: '+el.value.trim() : ''; }).filter(Boolean).join('\n');
+          const nn = (idea.notes||'')+'\n\nValidation:\n'+ans;
+          res.innerHTML = 'Re-analysing...';
+          sub.disabled = true;
+          fetch('/api/insight', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title:idea.title,cat:idea.cat,year:idea.year,hyp:idea.hyp,notes:nn,state:idea.state,action:'validate'})
           }).then(r2=>r2.json()).then(d2=>{
-            if(d2.validation&&res){res.innerHTML=d2.validation.split('**').map((p,i)=>i%2===1?'<strong style="color:#F0EDE8">'+p+'</strong>':p).join('').split('\n').join('<br>');idea.notes=nn;save();}
+            if(d2.validation && res){ res.innerHTML=d2.validation.split('**').map((p,i)=>i%2===1?'<strong style="color:#F0EDE8">'+p+'</strong>':p).join('').split('\n').join('<br>'); idea.notes=nn; save(); }
             sub.disabled=false;
           }).catch(()=>{sub.disabled=false;});
         };
       }
-    } else { res.innerHTML='Check GROQ_API_KEY in Vercel.'; }
-  }).catch(()=>{const r=document.getElementById('validate-result');if(r)r.innerHTML='API not reachable.';});
+    } else { res.innerHTML = 'Check GROQ_API_KEY in Vercel.'; }
+  }).catch(() => { const r=document.getElementById('validate-result'); if(r) r.innerHTML='API not reachable.'; });
 }
 
 function openAddModal() {
-  editingId = null; editingState = null;
+  editingId = null;
+  editingState = null;
   document.getElementById('modal-title').textContent = 'Add an idea';
-  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file','f-kill'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  const fy=document.getElementById('f-year'); if(fy) fy.value=new Date().getFullYear();
-  const kf=document.getElementById('kill-field'); if(kf) kf.style.display='none';
-  const bb=document.getElementById('btn-bury');
-  if(bb){bb.style.display='flex';bb.textContent='Cancel';bb.setAttribute('onclick','closeModal()');bb.style.cssText='background:transparent;border:0.5px solid rgba(255,255,255,0.1);color:#AAA;flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans)';}
-  const bp=document.getElementById('btn-pursue');
-  if(bp){bp.textContent='Save idea →';bp.setAttribute('onclick',"saveIdea('pursuing')");}
-  document.getElementById('modal-overlay').style.display='flex';
+  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file','f-kill'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  const fyear = document.getElementById('f-year'); if(fyear) fyear.value = new Date().getFullYear();
+  const kf = document.getElementById('kill-field'); if(kf) kf.style.display='none';
+  const bb = document.getElementById('btn-bury');
+  if(bb){ bb.style.display='flex'; bb.textContent='Cancel'; bb.setAttribute('onclick','closeModal()'); bb.style.cssText='background:transparent;border:0.5px solid rgba(255,255,255,0.1);color:#AAA;flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans)'; }
+  const bp = document.getElementById('btn-pursue');
+  if(bp){ bp.textContent='Save idea \u2192'; bp.setAttribute('onclick',"saveIdea('pursuing')"); }
+  document.getElementById('modal-overlay').style.display = 'flex';
 }
 
 function openEditModal(id) {
-  const idea=ideas.find(i=>i.id===id); if(!idea) return;
-  editingId=id; editingState=idea.state;
-  document.getElementById('modal-title').textContent='Edit idea';
-  document.getElementById('f-title').value=idea.title||'';
-  document.getElementById('f-hyp').value=idea.hyp||'';
-  document.getElementById('f-cat').value=idea.cat||'';
-  document.getElementById('f-year').value=idea.year||new Date().getFullYear();
-  document.getElementById('f-notes').value=idea.notes||'';
-  document.getElementById('f-link').value=idea.link||'';
-  document.getElementById('f-file').value=idea.file||'';
-  const bb=document.getElementById('btn-bury');
-  if(bb){bb.style.display='flex';bb.textContent='Cancel';bb.setAttribute('onclick','closeModal()');bb.style.cssText='background:transparent;border:0.5px solid rgba(255,255,255,0.1);color:#AAA;flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans)';}
-  document.getElementById('btn-pursue').textContent='Save changes';
+  const idea = ideas.find(i => i.id === id);
+  if (!idea) return;
+  editingId = id;
+  editingState = idea.state;
+  document.getElementById('modal-title').textContent = 'Edit idea';
+  document.getElementById('f-title').value = idea.title || '';
+  document.getElementById('f-hyp').value = idea.hyp || '';
+  document.getElementById('f-cat').value = idea.cat || '';
+  document.getElementById('f-year').value = idea.year || new Date().getFullYear();
+  document.getElementById('f-notes').value = idea.notes || '';
+  document.getElementById('f-link').value = idea.link || '';
+  document.getElementById('f-file').value = idea.file || '';
+  const bb = document.getElementById('btn-bury');
+  if(bb){ bb.style.display='flex'; bb.textContent='Cancel'; bb.setAttribute('onclick','closeModal()'); bb.style.cssText='background:transparent;border:0.5px solid rgba(255,255,255,0.1);color:#AAA;flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans)'; }
+  document.getElementById('btn-pursue').textContent = 'Save changes';
   document.getElementById('btn-pursue').setAttribute('onclick','saveIdea()');
-  document.getElementById('modal-overlay').style.display='flex';
+  document.getElementById('modal-overlay').style.display = 'flex';
 }
 
-function closeModal() { document.getElementById('modal-overlay').style.display='none'; }
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
 
 async function saveIdea(state) {
   const resolvedState = editingId ? editingState : (state || 'pursuing');
   const title = document.getElementById('f-title').value.trim();
   if (!title) { document.getElementById('f-title').focus(); return; }
   const data = {
-    title, hyp: document.getElementById('f-hyp').value.trim(),
+    title,
+    hyp: document.getElementById('f-hyp').value.trim(),
     cat: document.getElementById('f-cat').value.trim() || 'Uncategorized',
     year: parseInt(document.getElementById('f-year').value) || new Date().getFullYear(),
     notes: document.getElementById('f-notes').value.trim(),
@@ -1160,53 +1172,89 @@ async function saveIdea(state) {
 }
 
 function openDrawer(id) {
-  const idea = ideas.find(i => i.id === id); if(!idea) return;
+  const idea = ideas.find(i => i.id === id);
+  if (!idea) return;
   document.getElementById('d-title').textContent = idea.title;
   const chips = [];
-  if(idea.cat) chips.push('<span class="chip">'+idea.cat+'</span>');
+  if (idea.cat) chips.push('<span class="chip">'+idea.cat+'</span>');
   chips.push('<span class="chip" style="font-family:var(--mono)">'+idea.year+'</span>');
-  if(idea.state==='pursuing') chips.push('<span class="badge badge-pursuing" style="font-size:10px">pursuing</span>');
-  else { const sc=idea.score||0; chips.push('<span class="badge badge-'+scoreClass(sc)+'" style="font-size:10px">'+scoreBadge(sc)+'</span>'); }
+  if (idea.state === 'pursuing') chips.push('<span class="badge badge-pursuing" style="font-size:10px">pursuing</span>');
+  else { const sc = idea.score||0; chips.push('<span class="badge badge-'+scoreClass(sc)+'" style="font-size:10px">'+scoreBadge(sc)+'</span>'); }
   document.getElementById('d-chips').innerHTML = chips.join('');
-  const sec=(eid,v)=>document.getElementById(eid).style.display=v?'block':'none';
-  sec('d-hyp-sec',idea.hyp); if(idea.hyp) document.getElementById('d-hyp').textContent=idea.hyp;
-  sec('d-notes-sec',idea.notes); if(idea.notes) document.getElementById('d-notes').textContent=idea.notes;
-  sec('d-kill-sec',idea.kill&&idea.state==='buried'); if(idea.kill) document.getElementById('d-kill').textContent=idea.kill;
-  const isHot=idea.state==='buried';
-  sec('d-score-sec',isHot);
-  document.getElementById('d-score-fill').style.width=((idea.score||0)*10)+'%';
-  document.getElementById('d-score-text').textContent=(idea.score||0)+'/10';
-  sec('d-link-sec',idea.link);
-  if(idea.link){const a=document.getElementById('d-link');a.href=idea.link;a.textContent='\u2197 '+idea.link.replace(/^https?:\/\//,'').slice(0,45);}
-  sec('d-file-sec',idea.file); if(idea.file) document.getElementById('d-file').textContent='\uD83D\uDCCE '+idea.file;
-  sec('d-hot-sec',isHot);
-  if(isHot){
-    const lbl=document.getElementById('d-hot-label');
-    if(lbl){if(idea.score>=8)lbl.textContent='Why this is \uD83D\uDD25 Hot';else if(idea.score>=5)lbl.textContent='Why this is \uD83C\uDF24 Warm';else if(idea.score>0)lbl.textContent='Why this is \uD83E\uDDCA Cold';else lbl.textContent='AI analysis';}
-    const rEl=document.getElementById('d-hot-reason');
-    const lEl=document.getElementById('d-hot-loading');
-    if(rEl) rEl.style.opacity='1';
-    if(idea.aiReason){if(lEl)lEl.style.display='none';if(rEl)rEl.textContent=idea.aiReason;}
-    else{
-      if(rEl)rEl.textContent='';if(lEl)lEl.style.display='block';
+  const sec = (id,v) => document.getElementById(id).style.display = v?'block':'none';
+  if (idea.state === 'pursuing') {
+    const hasHyp = !!(idea.hyp && idea.hyp.trim());
+    const hasNotes = !!(idea.notes && idea.notes.trim());
+    const hasCat = !!(idea.cat && idea.cat !== 'Uncategorized');
+    const healthEl = document.getElementById('d-health-content');
+    if (healthEl) {
+      const items = [
+        { label: 'Hypothesis', done: hasHyp, tip: 'Add: "If we build X, then Y happens because Z"' },
+        { label: 'Notes', done: hasNotes, tip: 'Add research, blockers, or early signals' },
+        { label: 'Category', done: hasCat, tip: 'Tag with a category like "AI tooling" or "B2B SaaS"' },
+      ];
+      healthEl.innerHTML = items.map(function(item) {
+        return '<div style="display:flex;align-items:flex-start;gap:8px;font-size:12px">'
+          + '<span style="flex-shrink:0;color:' + (item.done ? '#1D9E75' : '#C8892A') + '">' + (item.done ? '✓' : '○') + '</span>'
+          + '<div><span style="color:' + (item.done ? '#666' : '#F0EDE8') + '">' + item.label + '</span>'
+          + (item.done ? '' : '<div style="color:#555;font-size:11px;margin-top:2px">' + item.tip + '</div>')
+          + '</div></div>';
+      }).join('');
+    }
+    sec('d-health-sec', true);
+  } else {
+    sec('d-health-sec', false);
+  }
+  sec('d-hyp-sec', idea.hyp); if(idea.hyp) document.getElementById('d-hyp').textContent = idea.hyp;
+  sec('d-notes-sec', idea.notes); if(idea.notes) document.getElementById('d-notes').textContent = idea.notes;
+  sec('d-kill-sec', idea.kill && idea.state==='buried'); if(idea.kill) document.getElementById('d-kill').textContent = idea.kill;
+  const isHot = idea.state === 'buried';
+  sec('d-score-sec', isHot);
+  document.getElementById('d-score-fill').style.width = ((idea.score||0)*10)+'%';
+  document.getElementById('d-score-text').textContent = (idea.score||0)+'/10';
+  sec('d-link-sec', idea.link);
+  if(idea.link){ const a=document.getElementById('d-link'); a.href=idea.link; a.textContent='\u2197 '+idea.link.replace(/^https?:\/\//,'').slice(0,45); }
+  sec('d-file-sec', idea.file); if(idea.file) document.getElementById('d-file').textContent='\uD83D\uDCCE '+idea.file;
+  sec('d-hot-sec', isHot);
+  if(isHot) {
+    const lbl = document.getElementById('d-hot-label');
+    if(lbl){ if(idea.score>=8) lbl.textContent='Why this is \uD83D\uDD25 Hot'; else if(idea.score>=5) lbl.textContent='Why this is \uD83C\uDF24 Warm'; else if(idea.score>0) lbl.textContent='Why this is \uD83E\uDDCA Cold'; else lbl.textContent='AI analysis'; }
+    const reasonEl=document.getElementById('d-hot-reason');
+    const loadEl=document.getElementById('d-hot-loading');
+    if(reasonEl) reasonEl.style.opacity='1';
+    if(idea.aiReason){ if(loadEl) loadEl.style.display='none'; if(reasonEl) reasonEl.textContent=idea.aiReason; }
+    else {
+      if(reasonEl) reasonEl.textContent='';
+      if(loadEl) loadEl.style.display='block';
       fetch('/api/insight',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:idea.title,cat:idea.cat,year:idea.year,score:idea.score,kill:idea.kill,hyp:idea.hyp,state:idea.state})})
       .then(r=>r.json()).then(d=>{
-        if(lEl)lEl.style.display='none';
-        if(d.insight&&rEl){rEl.textContent=d.insight;idea.aiReason=d.insight;save();}
-        else if(rEl){rEl.textContent='Could not generate insight.';rEl.style.opacity='.5';}
-      }).catch(()=>{if(lEl)lEl.style.display='none';if(rEl){rEl.textContent='API not reachable.';rEl.style.opacity='.5';}});
+        if(loadEl) loadEl.style.display='none';
+        if(d.insight&&reasonEl){ reasonEl.textContent=d.insight; idea.aiReason=d.insight; save(); }
+        else if(reasonEl){ reasonEl.textContent='Could not generate insight.'; reasonEl.style.opacity='.5'; }
+      }).catch(()=>{ if(loadEl) loadEl.style.display='none'; if(reasonEl){ reasonEl.textContent='API not reachable.'; reasonEl.style.opacity='.5'; } });
     }
   }
-  const actions=document.getElementById('d-actions'); actions.innerHTML='';
-  const editBtn=document.createElement('button'); editBtn.className='act'; editBtn.textContent='Edit'; editBtn.onclick=()=>{closeDrawer();openEditModal(id);}; actions.appendChild(editBtn);
+  const actions = document.getElementById('d-actions');
+  actions.innerHTML = '';
+  const editBtn = document.createElement('button');
+  editBtn.className='act'; editBtn.textContent='Edit';
+  editBtn.onclick=()=>{ closeDrawer(); openEditModal(id); };
+  actions.appendChild(editBtn);
   if(idea.state==='pursuing'){
-    const vBtn=document.createElement('button'); vBtn.className='act'; vBtn.style.cssText='border-color:rgba(120,80,220,0.3);color:#B09EE8'; vBtn.textContent='Validate with AI'; vBtn.onclick=()=>showValidatePanel(id); actions.appendChild(vBtn);
+    const vBtn=document.createElement('button');
+    vBtn.className='act'; vBtn.style.cssText='border-color:rgba(120,80,220,0.3);color:#B09EE8';
+    vBtn.textContent='Validate with AI';
+    vBtn.onclick=()=>showValidatePanel(id);
+    actions.appendChild(vBtn);
   }
-  const sBtn=document.createElement('button');
-  if(idea.state==='pursuing'){sBtn.className='act act-bury';sBtn.textContent='\uD83E\uDEA6 Bury it';sBtn.onclick=()=>{closeDrawer();changeState(id,'buried');};}
-  else{sBtn.className='act act-revive';sBtn.textContent='\u2191 Revive';sBtn.onclick=()=>{closeDrawer();changeState(id,'pursuing');};}
-  actions.appendChild(sBtn);
-  const dBtn=document.createElement('button'); dBtn.className='btn-delete'; dBtn.textContent='Delete'; dBtn.onclick=()=>showDeleteConfirm(id); actions.appendChild(dBtn);
+  const stateBtn=document.createElement('button');
+  if(idea.state==='pursuing'){ stateBtn.className='act act-bury'; stateBtn.textContent='🪦 Bury it'; stateBtn.onclick=()=>{ closeDrawer(); changeState(id,'buried'); }; }
+  else { stateBtn.className='act act-revive'; stateBtn.textContent='\u2191 Revive'; stateBtn.onclick=()=>{ closeDrawer(); changeState(id,'pursuing'); }; }
+  actions.appendChild(stateBtn);
+  const delBtn=document.createElement('button');
+  delBtn.className='btn-delete'; delBtn.textContent='Delete';
+  delBtn.onclick=()=>showDeleteConfirm(id);
+  actions.appendChild(delBtn);
   document.getElementById('drawer-bg').style.display='block';
   setTimeout(()=>document.getElementById('drawer').classList.add('open'),10);
 }
@@ -1219,10 +1267,12 @@ function closeDrawer() {
 
 function setTab(tab, btn) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active'); activeTab=tab; render();
+  btn.classList.add('active');
+  activeTab = tab;
+  render();
 }
 
-document.addEventListener('keydown', e=>{ if(e.key==='Escape'){closeModal();closeDrawer();} });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeModal(); closeDrawer(); } });
 
 render();
 </script>
