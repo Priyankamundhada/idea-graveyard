@@ -948,6 +948,7 @@ function showRIP() {
 function openAddModal() {
   editingId = null;
   editingState = null;
+  editingState = null;
   document.getElementById('modal-title').textContent = 'Add an idea';
   document.getElementById('f-id').value = '';
   ['f-title','f-hyp','f-cat','f-notes','f-link','f-file'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
