@@ -1047,6 +1047,96 @@ function validateIdea(id) {
   });
 }
 
+function showValidatePanel(id) {
+  const idea = ideas.find(i => i.id === id);
+  if (!idea) return;
+
+  const existing = document.getElementById('validate-panel');
+  if (existing) { existing.remove(); return; }
+
+  const panel = document.createElement('div');
+  panel.id = 'validate-panel';
+  panel.style.cssText = 'border:0.5px solid rgba(120,80,220,0.25);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:8px';
+
+  panel.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:#B09EE8;text-transform:uppercase;letter-spacing:.08em">Validate with AI</div>'
+    + '<div id="validate-result" style="font-size:12px;color:#AAA;line-height:1.7"><span style="color:#666;font-family:var(--mono);font-size:10px">Analysing your idea...</span></div>'
+    + '<div id="validate-questions" style="display:none;flex-direction:column;gap:8px"></div>'
+    + '<button id="validate-submit" style="display:none;padding:8px;border-radius:7px;background:rgba(120,80,220,0.15);border:0.5px solid rgba(120,80,220,0.3);color:#B09EE8;font-size:12px;cursor:pointer;font-family:var(--sans)">Re-analyse with my answers</button>';
+
+  const drawerActions = document.getElementById('d-actions');
+  drawerActions.parentNode.insertBefore(panel, drawerActions);
+
+  fetch('/api/insight', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: idea.title, cat: idea.cat, year: idea.year, hyp: idea.hyp, notes: idea.notes, state: idea.state, action: 'validate' })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const result = document.getElementById('validate-result');
+    const qSection = document.getElementById('validate-questions');
+    const submitBtn = document.getElementById('validate-submit');
+    if (!result) return;
+    if (data.validation) {
+      const text = data.validation;
+      const lines = text.split('
+');
+      let mainHtml = '';
+      let questions = [];
+      let inQ = false;
+      lines.forEach(line => {
+        if (line.match(/3 Questions/i)) { inQ = true; return; }
+        if (inQ && line.match(/^\d+\./)) { questions.push(line.replace(/^\d+\.\s*/, '')); }
+        else if (!inQ) { mainHtml += line.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#F0EDE8">$1</strong>') + '<br>'; }
+      });
+      result.innerHTML = mainHtml;
+      if (questions.length) {
+        qSection.style.display = 'flex';
+        qSection.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:#B09EE8;margin-bottom:4px">ANSWER TO STRENGTHEN</div>';
+        questions.forEach((q, i) => {
+          const d = document.createElement('div');
+          d.style.cssText = 'display:flex;flex-direction:column;gap:4px';
+          d.innerHTML = '<label style="font-size:11px;color:#AAA">' + (i+1) + '. ' + q + '</label>'
+            + '<textarea id="q-answer-' + i + '" rows="2" placeholder="Your answer..." style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:6px;padding:7px 10px;color:#F0EDE8;font-family:var(--sans);font-size:12px;outline:none;resize:none;width:100%;box-sizing:border-box;margin-top:2px"></textarea>';
+          qSection.appendChild(d);
+        });
+        submitBtn.style.display = 'block';
+        submitBtn.onclick = () => {
+          const answers = questions.map((q, i) => { const el = document.getElementById('q-answer-'+i); return el ? el.value.trim() : ''; }).filter(Boolean);
+          const extraNotes = (idea.notes || '') + '
+
+Validation answers:
+' + answers.join('
+');
+          result.innerHTML = '<span style="color:#666;font-family:var(--mono);font-size:10px">Re-analysing...</span>';
+          submitBtn.disabled = true;
+          fetch('/api/insight', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: idea.title, cat: idea.cat, year: idea.year, hyp: idea.hyp, notes: extraNotes, state: idea.state, action: 'validate' })
+          })
+          .then(r => r.json())
+          .then(d2 => {
+            if (d2.validation && result) {
+              result.innerHTML = d2.validation.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#F0EDE8">$1</strong>').replace(/
+/g, '<br>');
+              idea.notes = extraNotes; save();
+            }
+            submitBtn.disabled = false;
+          })
+          .catch(() => { submitBtn.disabled = false; });
+        };
+      }
+    } else {
+      result.innerHTML = '<span style="color:#666">Check your GROQ_API_KEY in Vercel.</span>';
+    }
+  })
+  .catch(() => {
+    const r = document.getElementById('validate-result');
+    if (r) r.innerHTML = '<span style="color:#666">API not reachable.</span>';
+  });
+}
+
 function openAddModal() {
   editingId = null;
   editingState = null;
@@ -1238,6 +1328,15 @@ function openDrawer(id) {
   editBtn.className = 'act'; editBtn.textContent = 'Edit';
   editBtn.onclick = () => { closeDrawer(); openEditModal(id); };
   actions.appendChild(editBtn);
+
+  if (idea.state === 'pursuing') {
+    const validateBtn = document.createElement('button');
+    validateBtn.className = 'act';
+    validateBtn.style.cssText = 'border-color:rgba(120,80,220,0.3);color:#B09EE8';
+    validateBtn.textContent = 'Validate with AI';
+    validateBtn.onclick = () => showValidatePanel(id);
+    actions.appendChild(validateBtn);
+  }
 
   const stateBtn = document.createElement('button');
   if (idea.state === 'pursuing') {
