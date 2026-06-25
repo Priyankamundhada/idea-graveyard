@@ -637,7 +637,14 @@ let editingId = null;
 let dragged = null;
 
 function loadIdeas() { try { return JSON.parse(localStorage.getItem('ig_ideas') || 'null'); } catch(e) { return null; } }
-let ideas = loadIdeas() || [];
+let ideas = loadIdeas() || [
+  {id:1,title:'Creator monetization layer',hyp:'Bundle subscriptions, digital products, and coaching into one dashboard.',cat:'Creator economy',year:2024,notes:'Stripe as the backend. We are the product layer. Spoke with 8 creators.',link:'https://notion.so',file:'',score:0,kill:'',state:'pursuing',created:Date.now()-5000000},
+  {id:2,title:'LLM fine-tuning for SMBs',hyp:'SMBs want private AI trained on their own data, not a shared GPT.',cat:'AI tooling',year:2023,notes:'Fine-tuning costs dropped 10x. Gap is data prep and eval tooling.',link:'',file:'market-sizing.xlsx',score:0,kill:'',state:'pursuing',created:Date.now()-2000000},
+  {id:3,title:'AI-powered meeting summarizer',hyp:'If we auto-summarize meetings, teams save 2hrs per person per week.',cat:'AI tooling',year:2021,notes:'',link:'',file:'',score:9,kill:'Seemed niche, no one paid for Zoom add-ons then',state:'buried',created:Date.now()-50000000},
+  {id:4,title:'No-code database for ops teams',hyp:'Ops managers need Airtable but simpler and cheaper.',cat:'No-code',year:2020,notes:'Spoke to 6 ops managers — all using spreadsheets for things that should be a DB.',link:'https://notion.so',file:'ops-research.pdf',score:8,kill:'Market felt too dominated by Airtable',state:'buried',created:Date.now()-80000000},
+  {id:5,title:'Autonomous DevOps agent',hyp:'If AI can write code, it can deploy and monitor it too.',cat:'AI tooling',year:2022,notes:'Early prototype showed 40% reduction in incident response time.',link:'',file:'agent-demo.mp4',score:9,kill:"Too early — ops teams weren't ready to trust AI with prod",state:'buried',created:Date.now()-40000000},
+  {id:6,title:'Vertical CRM for law firms',hyp:'Law firms hate Salesforce but need pipeline management.',cat:'Vertical SaaS',year:2022,notes:'',link:'',file:'',score:5,kill:"Sales cycle too long, couldn't close pilots fast enough",state:'buried',created:Date.now()-30000000},
+];
 
 function save() { try { localStorage.setItem('ig_ideas', JSON.stringify(ideas)); } catch(e) {} }
 
@@ -972,8 +979,8 @@ function openEditModal(id) {
   document.getElementById('f-score').value = idea.score || 5;
   document.getElementById('score-disp').textContent = idea.score || 5;
   document.getElementById('score-field').style.display = idea.state === 'buried' ? 'block' : 'none';
-  document.getElementById('btn-bury').style.display = 'none';
-  document.getElementById('btn-pursue').textContent = 'Save changes';
+  document.getElementById('btn-bury').style.display = idea.state === 'buried' ? 'flex' : 'none';
+  document.getElementById('btn-pursue').textContent = idea.state === 'buried' ? 'Move to pursuing' : 'Save changes';
   document.getElementById('modal-overlay').style.display = 'flex';
 }
 
