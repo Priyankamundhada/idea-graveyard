@@ -666,6 +666,7 @@ initStreak();
 let activeTab = 'all';
 let activeStatFilter = 'all';
 let editingId = null;
+let editingState = null;
 let dragged = null;
 
 function loadIdeas() { try { return JSON.parse(localStorage.getItem('ig_ideas') || 'null'); } catch(e) { return null; } }
