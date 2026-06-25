@@ -1173,8 +1173,8 @@ function openDrawer(id) {
   document.getElementById('d-score-fill').style.width = (idea.score * 10) + '%';
   document.getElementById('d-score-text').textContent = idea.score + '/10';
 
-  const isHot = true; // Show AI analysis for all ideas
-  sec('d-hot-sec', true);
+  const isHot = idea.state === 'buried';
+  sec('d-hot-sec', isHot);
   // Set label based on score
   const scoreLabel = document.getElementById('d-hot-label');
   if (scoreLabel) {
