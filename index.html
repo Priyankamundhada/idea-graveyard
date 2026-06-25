@@ -143,6 +143,36 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
 }
 .zone.over{background:rgba(29,158,117,0.06);border-color:rgba(29,158,117,0.35)}
 
+/* ── HEALTH DOT ── */
+.health-tag{font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:100px;flex-shrink:0;white-space:nowrap}
+.health-tag-green{background:rgba(29,158,117,0.15);color:#1D9E75;border:0.5px solid rgba(29,158,117,0.25)}
+.health-tag-amber{background:rgba(200,137,42,0.12);color:#C8892A;border:0.5px solid rgba(200,137,42,0.25)}
+.health-tag-red{background:rgba(224,80,80,0.12);color:#E05050;border:0.5px solid rgba(224,80,80,0.25)}
+.health-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;
+  transition:background .3s;
+}
+.health-green{background:#1D9E75;box-shadow:0 0 4px rgba(29,158,117,0.5)}
+.health-amber{background:#C8892A;box-shadow:0 0 4px rgba(200,137,42,0.5)}
+.health-red{background:#E05050;box-shadow:0 0 4px rgba(224,80,80,0.5)}
+
+/* ── STRENGTHEN NUDGE ── */
+.nudge-bar{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(200,137,42,0.08);
+  border:0.5px solid rgba(200,137,42,0.2);
+  border-radius:7px;padding:7px 10px;
+  font-size:11px;color:#F5C87A;
+  margin-top:2px;
+}
+.nudge-bar button{
+  margin-left:auto;font-size:10px;padding:2px 8px;
+  border-radius:4px;border:0.5px solid rgba(200,137,42,0.3);
+  background:transparent;color:#F5C87A;cursor:pointer;
+  font-family:var(--sans);white-space:nowrap;
+}
+.nudge-bar button:hover{background:rgba(200,137,42,0.1)}
+
 /* ── CARD ── */
 @keyframes flyRight{
   0%{transform:translateX(0) scale(1);opacity:1}
@@ -520,10 +550,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
       <div class="field"><label>Link (Notion, Doc, Figma...)</label><input id="f-link" type="url" placeholder="https://notion.so/..." /></div>
       <div class="field"><label>Attachment name</label><input id="f-file" type="text" placeholder="deck-v2.pdf" /></div>
     </div>
-    <div class="field" id="kill-field" style="display:none">
-      <label>Why are you burying it?</label>
-      <textarea id="f-kill" rows="2" placeholder="Too early, no market, distraction, resource constrained..."></textarea>
-    </div>
     <div id="ai-scoring-status" style="display:none;font-family:var(--mono);font-size:10px;color:var(--teal-light);padding:8px 0;">
       ✦ AI is scoring this idea...
     </div>
@@ -532,7 +558,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
     <div class="modal-btns">
       <button class="btn-bury" id="btn-bury"
   
-        onclick="showKillField()">🪦 Bury it</button>
+        onclick="saveIdea('buried')">🪦 Bury it</button>
       <button class="btn-pursue" id="btn-pursue" onclick="saveIdea(null)">Pursue it →</button>
     </div>
   </div>
@@ -762,8 +788,27 @@ function makeCard(idea) {
     ? `<button class="act act-bury">🪦 Bury</button>`
     : `<button class="act act-revive">↑ Revive</button>`;
 
+  // Health score for pursuing ideas
+  let healthDot = '';
+  let nudgeBar = '';
+  if (idea.state === 'pursuing') {
+    const hasHyp = !!(idea.hyp && idea.hyp.trim());
+    const hasNotes = !!(idea.notes && idea.notes.trim());
+    const hasCat = !!(idea.cat && idea.cat !== 'Uncategorized');
+    const filled = [hasHyp, hasNotes, hasCat].filter(Boolean).length;
+    const dotClass = filled === 3 ? 'health-green' : filled >= 1 ? 'health-amber' : 'health-red';
+    const dotTitle = filled === 3 ? 'Complete' : filled >= 1 ? 'Missing some fields' : 'Just a title — add hypothesis and notes';
+    healthDot = `<div class="health-dot ${dotClass}" title="${dotTitle}"></div>`;
+
+    // Strengthen nudge — show if no hypothesis and idea is older than 2 days
+    const ageDays = (Date.now() - idea.created) / (1000 * 60 * 60 * 24);
+    if (!hasHyp && ageDays >= 2) {
+      nudgeBar = `<div class="nudge-bar">💡 Strengthen this idea — add a hypothesis<button onclick="event.stopPropagation();openEditModal(${idea.id})">Add now →</button></div>`;
+    }
+  }
+
   div.innerHTML = `
-    <div class="card-top"><div class="card-title">${idea.title}</div>${badge}</div>
+    <div class="card-top"><div class="card-title">${idea.title}</div>${healthDot}${badge}</div>
     <div class="chips">${chips}</div>
     ${body}
     <div class="card-foot">
@@ -773,7 +818,9 @@ function makeCard(idea) {
         ${actionBtn}
       </div>
     </div>
-    ${isHot ? '<div class="revisit-flag">✦ worth revisiting</div>' : ''}`;
+    ${isHot ? '<div class="revisit-flag">✦ worth revisiting</div>' : ''}
+    ${nudgeBar}
+    ${nudgeBar}`;
 
   div.querySelector('.act-bury, .act-revive')?.addEventListener('click', e => {
     e.stopPropagation();
@@ -815,42 +862,6 @@ function onDrop(e, zone) {
   dragged = null;
 }
 
-function showKillPrompt(idea) {
-  return new Promise((resolve) => {
-    // Remove any existing
-    document.getElementById('kill-prompt-bg')?.remove();
-
-    const bg = document.createElement('div');
-    bg.id = 'kill-prompt-bg';
-    bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
-    bg.innerHTML = `
-      <div style="background:#141414;border:0.5px solid rgba(200,60,60,0.25);border-radius:14px;width:100%;max-width:380px;padding:24px">
-        <div style="font-size:15px;font-weight:500;color:#F5F2ED;margin-bottom:6px">🪦 Bury this idea?</div>
-        <div style="font-size:12px;color:#777;margin-bottom:14px">Why are you burying it? This helps the AI score its future relevance.</div>
-        <textarea id="kill-reason-input" rows="3" placeholder="Too early, no market, distraction, resource constrained..." style="width:100%;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:9px 12px;color:#F0EDE8;font-family:Inter,sans-serif;font-size:13px;outline:none;resize:none;box-sizing:border-box"></textarea>
-        <div style="display:flex;gap:8px;margin-top:14px">
-          <button id="kill-cancel" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif;background:transparent;border:0.5px solid rgba(255,255,255,0.1);color:#AAA">Cancel</button>
-          <button id="kill-confirm" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif;background:rgba(200,60,60,0.15);border:0.5px solid rgba(200,60,60,0.4);color:#E88888">Bury it</button>
-        </div>
-      </div>`;
-
-    document.body.appendChild(bg);
-    document.getElementById('kill-reason-input').focus();
-
-    document.getElementById('kill-cancel').onclick = () => {
-      bg.remove();
-      idea._cancelBury = true;
-      resolve();
-    };
-    document.getElementById('kill-confirm').onclick = () => {
-      const reason = document.getElementById('kill-reason-input').value.trim();
-      idea.kill = reason || 'No reason recorded';
-      bg.remove();
-      resolve();
-    };
-  });
-}
-
 function changeState(id, newState) {
   const idea = ideas.find(i => i.id === id);
   if (!idea || idea.state === newState) return;
@@ -873,20 +884,7 @@ function changeState(id, newState) {
         idea.kill = '';
         idea.score = 0;
       } else {
-        // Ask for kill reason
-        showKillPrompt(idea).then(() => {
-          if (idea._cancelBury) { delete idea._cancelBury; return; }
-          idea.state = 'buried';
-          save(); render(); showRIP();
-          fetch('/api/insight', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: idea.title, cat: idea.cat, year: idea.year, kill: idea.kill, hyp: idea.hyp, notes: idea.notes, action: 'score' })
-          }).then(r => r.json()).then(data => {
-            if (data.score) { idea.score = data.score; idea.aiReason = data.reason || ''; save(); render(); }
-          }).catch(() => {});
-        });
-        return;
+        if (!idea.score || idea.score === 0) idea.score = 5;
       }
       save(); render();
 
@@ -998,37 +996,17 @@ function showRIP() {
 }
 
 // ── Modal ──
-function showKillField() {
-  const kf = document.getElementById('kill-field');
-  const btn = document.getElementById('btn-bury');
-  if (kf.style.display === 'none') {
-    kf.style.display = 'block';
-    btn.textContent = 'Confirm bury';
-    btn.onclick = () => saveIdea('buried');
-    document.getElementById('f-kill').focus();
-  } else {
-    saveIdea('buried');
-  }
-}
-
 function openAddModal() {
   editingId = null;
   editingState = null;
   document.getElementById('modal-title').textContent = 'Add an idea';
-  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file','f-kill'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  const fyear = document.getElementById('f-year');
-  if (fyear) fyear.value = new Date().getFullYear();
-  const kf = document.getElementById('kill-field');
-  if (kf) kf.style.display = 'none';
-  const bb = document.getElementById('btn-bury');
-  if (bb) { bb.style.display = 'flex'; bb.textContent = '🪦 Bury it'; bb.setAttribute('onclick','showKillField()'); }
-  const bp = document.getElementById('btn-pursue');
-  if (bp) { bp.textContent = 'Pursue it →'; bp.setAttribute('onclick','saveIdea(null)'); }
-  const ai = document.getElementById('ai-scoring-status');
-  if (ai) ai.style.display = 'none';
+  document.getElementById('f-id').value = '';
+  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('f-year').value = new Date().getFullYear();
+  document.getElementById('f-year').value = new Date().getFullYear();
+
+  document.getElementById('btn-bury').style.display = 'flex';
+  document.getElementById('btn-pursue').textContent = 'Pursue it →';
   document.getElementById('modal-overlay').style.display = 'flex';
 }
 
@@ -1147,7 +1125,7 @@ function openDrawer(id) {
   const isHot = true; // Show AI analysis for all ideas
   sec('d-hot-sec', true);
   // Set label based on score
-  const scoreLabel = document.getElementById('d-hot-label'); // may be null - guarded below
+  const scoreLabel = document.getElementById('d-hot-label');
   if (scoreLabel) {
     if (idea.state === 'pursuing') scoreLabel.textContent = 'AI analysis';
     else if (idea.score >= 8) scoreLabel.textContent = 'Why this is 🔥 Hot';
