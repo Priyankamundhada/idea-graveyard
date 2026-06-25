@@ -31,15 +31,27 @@ Respond ONLY with valid JSON in this exact format, nothing else:
 {"score": 7, "reason": "2-3 sentence explanation of why this score, referencing specific market shifts"}`;
 
   } else {
-    // Called when opening drawer on a hot idea
-    prompt = `A founder buried this startup idea in ${year}:
+    // Called when opening drawer - works for both pursuing and buried ideas
+    const { state, notes } = req.body;
+    if (state === 'pursuing') {
+      prompt = `A founder is actively pursuing this startup idea:
+
+Title: "${title}"
+Category: ${cat || 'Unknown'}
+Hypothesis: ${hyp || 'Not specified'}
+Notes: ${notes || 'None'}
+
+In 2-3 sentences, give sharp tactical advice on what to validate first and what the biggest risk is. Be specific and direct.`;
+    } else {
+      prompt = `A founder buried this startup idea in ${year}:
 
 Title: "${title}"
 Category: ${cat || 'Unknown'}
 Hypothesis: ${hyp || 'Not specified'}
 Why they killed it: "${kill || 'No reason recorded'}"
 
-In 2-3 sentences, explain specifically why the timing or market conditions might be better for this idea now. Be concrete — mention real shifts in technology, regulation, consumer behavior, or infrastructure relevant to this idea. Do not be generic.`;
+In 2-3 sentences, explain specifically why the timing or market conditions might be better for this idea now. Be concrete — mention real shifts in technology, regulation, consumer behavior, or infrastructure. Do not be generic.`;
+    }
   }
 
   try {
