@@ -837,7 +837,10 @@ function changeState(id, newState) {
         idea.kill = '';
         idea.score = 0;
       } else {
-        if (!idea.score || idea.score === 0) idea.score = 5;
+        // Ask for kill reason
+        const reason = prompt('Why are you burying this idea?\n(press Cancel to abort)', '');
+        if (reason === null) return;
+        idea.kill = reason.trim() || 'No reason recorded';
       }
       save(); render();
 
