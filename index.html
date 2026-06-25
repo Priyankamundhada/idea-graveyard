@@ -560,7 +560,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
     <div class="modal-btns">
       <button class="btn-bury" id="btn-bury"
   
-        onclick="closeModal()">Cancel</button>
+        onclick="saveIdea('buried')">🪦 Bury it</button>
       <button class="btn-pursue" id="btn-pursue" onclick="saveIdea('pursuing')">Save idea →</button>
     </div>
   </div>
@@ -864,6 +864,44 @@ function onDrop(e, zone) {
   dragged = null;
 }
 
+function showKillReasonModal(idea, callback) {
+  const existing = document.getElementById('kill-reason-modal');
+  if (existing) existing.remove();
+
+  const bg = document.createElement('div');
+  bg.id = 'kill-reason-modal';
+  bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px)';
+  bg.innerHTML = '<div style="background:#141414;border:0.5px solid rgba(200,60,60,0.25);border-radius:14px;width:100%;max-width:380px;padding:24px">'
+    + '<div style="font-size:15px;font-weight:500;color:#F5F2ED;margin-bottom:6px">🪦 Why are you burying this?</div>'
+    + '<div style="font-size:12px;color:#777;margin-bottom:14px">This helps the AI score its future relevance and know when to resurface it.</div>'
+    + '<div style="font-size:12px;color:#AAA;font-style:italic;margin-bottom:12px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:7px;border:0.5px solid rgba(255,255,255,0.07)">"' + idea.title + '"</div>'
+    + '<textarea id="kill-reason-text" rows="3" placeholder="Too early, no market, distraction, resource constrained..." style="width:100%;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:9px 12px;color:#F0EDE8;font-size:13px;outline:none;resize:none;box-sizing:border-box"></textarea>'
+    + '<div style="display:flex;gap:8px;margin-top:14px">'
+    + '<button id="kill-cancel-btn" style="flex:1;padding:9px;border-radius:8px;font-size:13px;cursor:pointer;background:transparent;border:0.5px solid rgba(255,255,255,0.1);color:#AAA">Cancel</button>'
+    + '<button id="kill-confirm-btn" style="flex:1;padding:9px;border-radius:8px;font-size:13px;cursor:pointer;background:rgba(200,60,60,0.15);border:0.5px solid rgba(200,60,60,0.4);color:#E88888">Bury it</button>'
+    + '</div></div>';
+
+  document.body.appendChild(bg);
+
+  setTimeout(function() {
+    var el = document.getElementById('kill-reason-text');
+    if (el) el.focus();
+  }, 100);
+
+  document.getElementById('kill-cancel-btn').onclick = function() {
+    bg.remove();
+    callback(null);
+  };
+  document.getElementById('kill-confirm-btn').onclick = function() {
+    var reason = document.getElementById('kill-reason-text').value.trim();
+    bg.remove();
+    callback(reason);
+  };
+  bg.onclick = function(e) {
+    if (e.target === bg) { bg.remove(); callback(null); }
+  };
+}
+
 function changeState(id, newState) {
   const idea = ideas.find(i => i.id === id);
   if (!idea || idea.state === newState) return;
@@ -886,7 +924,22 @@ function changeState(id, newState) {
         idea.kill = '';
         idea.score = 0;
       } else {
-        if (!idea.score || idea.score === 0) idea.score = 5;
+        // Show kill reason modal before burying
+        showKillReasonModal(idea, function(reason) {
+          if (reason === null) { render(); return; } // cancelled
+          idea.kill = reason || 'No reason recorded';
+          save(); render();
+          // AI score in background
+          fetch('/api/insight', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: idea.title, cat: idea.cat, year: idea.year, kill: idea.kill, hyp: idea.hyp, notes: idea.notes, action: 'score' })
+          }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.score) { idea.score = data.score; idea.aiReason = data.reason || ''; save(); render(); }
+          }).catch(function(){});
+          showRIP();
+        });
+        return; // wait for modal callback
       }
       save(); render();
 
@@ -1051,88 +1104,112 @@ function showValidatePanel(id) {
   const idea = ideas.find(i => i.id === id);
   if (!idea) return;
 
+  // Insert validate panel into drawer above actions
   const existing = document.getElementById('validate-panel');
-  if (existing) { existing.remove(); return; }
+  if (existing) existing.remove();
 
   const panel = document.createElement('div');
   panel.id = 'validate-panel';
-  panel.style.cssText = 'border:0.5px solid rgba(120,80,220,0.25);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:8px';
-  panel.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:#B09EE8;text-transform:uppercase;letter-spacing:.08em">Validate with AI</div>'
-    + '<div id="validate-result" style="font-size:12px;color:#AAA;line-height:1.7">Analysing...</div>'
-    + '<div id="validate-questions" style="display:none;flex-direction:column;gap:8px"></div>'
-    + '<button id="validate-submit" style="display:none;padding:8px;border-radius:7px;background:rgba(120,80,220,0.15);border:0.5px solid rgba(120,80,220,0.3);color:#B09EE8;font-size:12px;cursor:pointer">Re-analyse with my answers</button>';
+  panel.style.cssText = 'border:0.5px solid rgba(120,80,220,0.25);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;';
+
+  panel.innerHTML = `
+    <div style="font-family:var(--mono);font-size:9px;color:#B09EE8;text-transform:uppercase;letter-spacing:.08em">✦ AI Validation</div>
+    <div id="validate-result" style="font-size:12px;color:#AAA;line-height:1.7;min-height:40px">
+      <span style="color:#666;font-family:var(--mono);font-size:10px">Analysing your idea...</span>
+    </div>
+    <div id="validate-questions" style="display:none;flex-direction:column;gap:8px"></div>
+    <button id="validate-submit" style="display:none;padding:8px;border-radius:7px;background:rgba(120,80,220,0.15);border:0.5px solid rgba(120,80,220,0.3);color:#B09EE8;font-size:12px;cursor:pointer;font-family:var(--sans)">Re-analyse with my answers →</button>
+  `;
 
   const drawerActions = document.getElementById('d-actions');
   drawerActions.parentNode.insertBefore(panel, drawerActions);
 
+  // Call API
   fetch('/api/insight', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title: idea.title, cat: idea.cat, year: idea.year, hyp: idea.hyp, notes: idea.notes, state: idea.state, action: 'validate' })
   })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    var result = document.getElementById('validate-result');
-    var qSection = document.getElementById('validate-questions');
-    var submitBtn = document.getElementById('validate-submit');
+  .then(r => r.json())
+  .then(data => {
+    const result = document.getElementById('validate-result');
+    const qSection = document.getElementById('validate-questions');
+    const submitBtn = document.getElementById('validate-submit');
     if (!result) return;
+
     if (data.validation) {
-      var text = data.validation;
-      var questions = [];
-      var mainLines = [];
-      var inQ = false;
-      text.split('\n').forEach(function(line) {
-        if (line.match(/3 Questions/i)) { inQ = true; return; }
-        if (inQ && line.match(/^[123]\./)) { questions.push(line.replace(/^[123]\.\s*/, '')); }
-        else if (!inQ) { mainLines.push(line.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#F0EDE8">$1</strong>')); }
-      });
-      result.innerHTML = mainLines.join('<br>');
-      if (questions.length) {
-        qSection.style.display = 'flex';
-        qSection.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:#B09EE8;margin-bottom:4px">ANSWER TO STRENGTHEN YOUR IDEA</div>';
-        questions.forEach(function(q, i) {
-          var d = document.createElement('div');
-          d.style.cssText = 'display:flex;flex-direction:column;gap:4px';
-          d.innerHTML = '<label style="font-size:11px;color:#AAA">' + (i+1) + '. ' + q + '</label>'
-            + '<textarea id="q-answer-' + i + '" rows="2" placeholder="Your answer..." style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:6px;padding:7px 10px;color:#F0EDE8;font-size:12px;outline:none;resize:none;width:100%;box-sizing:border-box;margin-top:2px"></textarea>';
-          qSection.appendChild(d);
-        });
-        submitBtn.style.display = 'block';
-        submitBtn.onclick = function() {
-          var answers = [];
-          for (var i = 0; i < questions.length; i++) {
-            var el = document.getElementById('q-answer-' + i);
-            if (el && el.value.trim()) answers.push((i+1) + '. ' + questions[i] + '\nAnswer: ' + el.value.trim());
-          }
-          var extraNotes = (idea.notes || '') + '\n\nValidation answers:\n' + answers.join('\n');
-          result.innerHTML = 'Re-analysing with your answers...';
-          submitBtn.disabled = true;
-          fetch('/api/insight', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: idea.title, cat: idea.cat, year: idea.year, hyp: idea.hyp, notes: extraNotes, state: idea.state, action: 'validate' })
-          })
-          .then(function(r2) { return r2.json(); })
-          .then(function(d2) {
-            if (d2.validation && result) {
-              result.innerHTML = d2.validation.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#F0EDE8">$1</strong>').replace(/\n/g, '<br>');
-              idea.notes = extraNotes; save();
-            }
-            submitBtn.disabled = false;
-          })
-          .catch(function() { submitBtn.disabled = false; });
-        };
+      // Parse out the questions section
+      const text = data.validation;
+      const qMatch = text.match(/\*\*3 Questions[^*]*\*\*([\s\S]*?)(?:\n\n|$)/);
+      const mainText = text.replace(/\*\*3 Questions[^*]*\*\*[\s\S]*$/, '').trim();
+
+      result.innerHTML = mainText
+        .replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#F0EDE8">$1</strong>')
+        .replace(/\n/g, '<br>');
+
+      // Extract questions and make them answerable
+      if (qMatch) {
+        const questions = qMatch[1].trim().split(/\n\d+\./).filter(q => q.trim());
+        if (questions.length) {
+          qSection.style.display = 'flex';
+          qSection.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:#B09EE8;margin-bottom:4px">ANSWER THESE TO STRENGTHEN YOUR IDEA</div>';
+          questions.forEach((q, i) => {
+            const qDiv = document.createElement('div');
+            qDiv.style.cssText = 'display:flex;flex-direction:column;gap:4px';
+            qDiv.innerHTML = '<label style="font-size:11px;color:#AAA">' + (i+1) + '. ' + q.trim() + '</label>'
+              + '<textarea id="q-answer-' + i + '" rows="2" placeholder="Your answer..." style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:6px;padding:7px 10px;color:#F0EDE8;font-family:var(--sans);font-size:12px;outline:none;resize:none;width:100%;box-sizing:border-box;margin-top:4px"></textarea>';
+            qSection.appendChild(qDiv);
+          });
+          submitBtn.style.display = 'block';
+          submitBtn.onclick = () => reAnalyse(id, questions.length);
+        }
       }
     } else {
-      result.innerHTML = 'Could not validate. Check GROQ_API_KEY in Vercel.';
+      result.innerHTML = '<span style="color:#666">Could not validate — check GROQ_API_KEY in Vercel.</span>';
     }
   })
-  .catch(function() {
-    var r = document.getElementById('validate-result');
-    if (r) r.innerHTML = 'API not reachable.';
+  .catch(() => {
+    const result = document.getElementById('validate-result');
+    if (result) result.innerHTML = '<span style="color:#666">API not reachable.</span>';
   });
 }
 
+function reAnalyse(id, qCount) {
+  const idea = ideas.find(i => i.id === id);
+  if (!idea) return;
+
+  const answers = [];
+  for (let i = 0; i < qCount; i++) {
+    const el = document.getElementById('q-answer-' + i);
+    if (el && el.value.trim()) answers.push(el.value.trim());
+  }
+
+  const extraNotes = idea.notes ? idea.notes + '\n\nValidation answers:\n' + answers.join('\n') : 'Validation answers:\n' + answers.join('\n');
+
+  const result = document.getElementById('validate-result');
+  const submitBtn = document.getElementById('validate-submit');
+  if (result) result.innerHTML = '<span style="color:#666;font-family:var(--mono);font-size:10px">Re-analysing with your answers...</span>';
+  if (submitBtn) submitBtn.disabled = true;
+
+  fetch('/api/insight', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: idea.title, cat: idea.cat, year: idea.year, hyp: idea.hyp, notes: extraNotes, state: idea.state, action: 'validate' })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (result && data.validation) {
+      result.innerHTML = data.validation
+        .replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#F0EDE8">$1</strong>')
+        .replace(/\n/g, '<br>');
+      // Save answers to idea notes
+      idea.notes = extraNotes;
+      save();
+    }
+    if (submitBtn) submitBtn.disabled = false;
+  })
+  .catch(() => { if (submitBtn) submitBtn.disabled = false; });
+}
 
 function openAddModal() {
   editingId = null;
@@ -1144,7 +1221,7 @@ function openAddModal() {
   document.getElementById('f-year').value = new Date().getFullYear();
 
   document.getElementById('btn-bury').style.display = 'flex';
-  document.getElementById('btn-pursue').textContent = 'Save idea →';
+  document.getElementById('btn-pursue').textContent = 'Pursue it →';
   document.getElementById('modal-overlay').style.display = 'flex';
 }
 
@@ -1163,7 +1240,8 @@ function openEditModal(id) {
   document.getElementById('f-link').value = idea.link || '';
   document.getElementById('f-file').value = idea.file || '';
 
-  document.getElementById('btn-bury').style.display = 'none';
+  const editBury = document.getElementById('btn-bury');
+  if(editBury){editBury.style.display='flex';editBury.textContent='Cancel';editBury.setAttribute('onclick','closeModal()');editBury.style.cssText='background:transparent;border:0.5px solid rgba(255,255,255,0.1);color:#AAA;flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans)';}
   document.getElementById('btn-pursue').textContent = 'Save changes';
   document.getElementById('btn-pursue').setAttribute('onclick', 'saveIdea()');
   document.getElementById('modal-overlay').style.display = 'flex';
@@ -1265,13 +1343,12 @@ function openDrawer(id) {
   // Set label based on score
   const scoreLabel = document.getElementById('d-hot-label');
   if (scoreLabel) {
-    if (idea.state === 'pursuing') scoreLabel.textContent = 'AI analysis';
-    else if (idea.score >= 8) scoreLabel.textContent = 'Why this is 🔥 Hot';
+    if (idea.score >= 8) scoreLabel.textContent = 'Why this is 🔥 Hot';
     else if (idea.score >= 5) scoreLabel.textContent = 'Why this is 🌤 Warm';
     else if (idea.score > 0) scoreLabel.textContent = 'Why this is 🧊 Cold';
     else scoreLabel.textContent = 'AI analysis';
   }
-  if (true) {
+  if (isHot) {
     const reasonEl = document.getElementById('d-hot-reason');
     const loadingEl = document.getElementById('d-hot-loading');
     reasonEl.style.opacity = '1';
@@ -1328,9 +1405,8 @@ function openDrawer(id) {
 
   if (idea.state === 'pursuing') {
     const validateBtn = document.createElement('button');
-    validateBtn.className = 'act';
-    validateBtn.style.cssText = 'border-color:rgba(120,80,220,0.3);color:#B09EE8';
-    validateBtn.textContent = 'Validate with AI';
+    validateBtn.className = 'act act-validate';
+    validateBtn.textContent = '✦ Validate with AI';
     validateBtn.onclick = () => showValidatePanel(id);
     actions.appendChild(validateBtn);
   }
