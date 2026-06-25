@@ -943,8 +943,6 @@ function openAddModal() {
   document.getElementById('f-id').value = '';
   ['f-title','f-hyp','f-cat','f-notes','f-link','f-file'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-year').value = new Date().getFullYear();
-  document.getElementById('f-score').value = 5;
-  document.getElementById('score-disp').textContent = '5';
   
   document.getElementById('btn-bury').style.display = 'flex';
   document.getElementById('btn-pursue').textContent = 'Pursue it →';
@@ -965,8 +963,6 @@ function openEditModal(id) {
   document.getElementById('f-notes').value = idea.notes || '';
   document.getElementById('f-link').value = idea.link || '';
   document.getElementById('f-file').value = idea.file || '';
-  document.getElementById('f-score').value = idea.score || 5;
-  document.getElementById('score-disp').textContent = idea.score || 5;
   
   document.getElementById('btn-bury').style.display = 'none';
   document.getElementById('btn-pursue').textContent = 'Save changes';
@@ -982,7 +978,7 @@ async function saveIdea(state) {
   const resolvedState = editingId ? editingState : (state || 'pursuing');
   const title = document.getElementById('f-title').value.trim();
   if (!title) { document.getElementById('f-title').focus(); return; }
-  const score = parseInt(document.getElementById('f-score').value) || 5;
+  const score = 0;
   const data = {
     title,
     hyp: document.getElementById('f-hyp').value.trim(),
