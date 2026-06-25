@@ -976,7 +976,7 @@ function closeModal() {
   document.getElementById('score-field').style.display = 'none';
 }
 
-function saveIdea(state) {
+async function saveIdea(state) {
   const title = document.getElementById('f-title').value.trim();
   if (!title) { document.getElementById('f-title').focus(); return; }
   const score = parseInt(document.getElementById('f-score').value) || 5;
