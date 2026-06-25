@@ -520,6 +520,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
       <div class="field"><label>Link (Notion, Doc, Figma...)</label><input id="f-link" type="url" placeholder="https://notion.so/..." /></div>
       <div class="field"><label>Attachment name</label><input id="f-file" type="text" placeholder="deck-v2.pdf" /></div>
     </div>
+    <div class="field" id="kill-field" style="display:none">
+      <label>Why are you burying it?</label>
+      <textarea id="f-kill" rows="2" placeholder="Too early, no market, distraction, resource constrained..."></textarea>
+    </div>
     <div id="ai-scoring-status" style="display:none;font-family:var(--mono);font-size:10px;color:var(--teal-light);padding:8px 0;">
       ✦ AI is scoring this idea...
     </div>
@@ -945,13 +949,28 @@ function showRIP() {
 }
 
 // ── Modal ──
+function showKillField() {
+  const kf = document.getElementById('kill-field');
+  const btn = document.getElementById('btn-bury');
+  if (kf.style.display === 'none') {
+    kf.style.display = 'block';
+    btn.textContent = 'Confirm bury';
+    btn.onclick = () => saveIdea('buried');
+    document.getElementById('f-kill').focus();
+  } else {
+    saveIdea('buried');
+  }
+}
+
 function openAddModal() {
   editingId = null;
   editingState = null;
   editingState = null;
   document.getElementById('modal-title').textContent = 'Add an idea';
   document.getElementById('f-id').value = '';
-  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file','f-kill'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  const kf = document.getElementById('kill-field'); if(kf) kf.style.display='none';
+  const bb = document.getElementById('btn-bury'); if(bb) { bb.textContent='🪦 Bury it'; bb.onclick = showKillField; }
   document.getElementById('f-year').value = new Date().getFullYear();
   document.getElementById('f-year').value = new Date().getFullYear();
 
