@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   let prompt;
 
-  if (action === 'score') {
+  } else if (action === 'score') {
     // Called when burying — score the idea and optionally explain why it might be hot
     prompt = `You are a sharp startup analyst. A founder is burying this idea:
 
@@ -87,7 +87,7 @@ In 2-3 sentences, explain specifically why the timing or market conditions might
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content?.trim();
 
-    if (action === 'score') {
+    } else if (action === 'score') {
       try {
         const parsed = JSON.parse(text);
         return res.status(200).json({ score: parsed.score, reason: parsed.reason });
