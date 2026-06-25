@@ -972,8 +972,8 @@ function openEditModal(id) {
   document.getElementById('f-score').value = idea.score || 5;
   document.getElementById('score-disp').textContent = idea.score || 5;
   document.getElementById('score-field').style.display = idea.state === 'buried' ? 'block' : 'none';
-  document.getElementById('btn-bury').style.display = idea.state === 'buried' ? 'flex' : 'none';
-  document.getElementById('btn-pursue').textContent = idea.state === 'buried' ? 'Move to pursuing' : 'Save changes';
+  document.getElementById('btn-bury').style.display = 'none';
+  document.getElementById('btn-pursue').textContent = 'Save changes';
   document.getElementById('modal-overlay').style.display = 'flex';
 }
 
