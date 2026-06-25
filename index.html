@@ -516,13 +516,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
       <div class="field"><label>Link (Notion, Doc, Figma...)</label><input id="f-link" type="url" placeholder="https://notion.so/..." /></div>
       <div class="field"><label>Attachment name</label><input id="f-file" type="text" placeholder="deck-v2.pdf" /></div>
     </div>
-    <div class="field" id="score-field" style="display:none">
-      <label>Relevance score (1–10)</label>
-      <div class="score-row">
-        <input type="range" min="1" max="10" value="5" step="1" id="f-score" oninput="document.getElementById('score-disp').textContent=this.value" />
-        <span class="score-disp" id="score-disp">5</span>
-      </div>
-    </div>
+    <div id="ai-scoring-status" style="display:none;font-family:monospace;font-size:10px;color:#9FE1CB;padding:8px 0;">✦ AI is scoring this idea...</div>
     <input type="hidden" id="f-id" />
 
     <div class="modal-btns">
@@ -972,8 +966,8 @@ function openEditModal(id) {
   document.getElementById('f-score').value = idea.score || 5;
   document.getElementById('score-disp').textContent = idea.score || 5;
   document.getElementById('score-field').style.display = idea.state === 'buried' ? 'block' : 'none';
-  document.getElementById('btn-bury').style.display = idea.state === 'buried' ? 'flex' : 'none';
-  document.getElementById('btn-pursue').textContent = idea.state === 'buried' ? 'Move to pursuing' : 'Save changes';
+  document.getElementById('btn-bury').style.display = 'none';
+  document.getElementById('btn-pursue').textContent = 'Save changes';
   document.getElementById('modal-overlay').style.display = 'flex';
 }
 
