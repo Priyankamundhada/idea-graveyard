@@ -1004,14 +1004,20 @@ function openAddModal() {
   editingId = null;
   editingState = null;
   document.getElementById('modal-title').textContent = 'Add an idea';
-  document.getElementById('f-id').value = '';
-  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file','f-kill'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  const kf = document.getElementById('kill-field'); if(kf) kf.style.display='none';
-  const bb = document.getElementById('btn-bury'); if(bb) { bb.textContent='🪦 Bury it'; bb.onclick = showKillField; }
-  document.getElementById('f-year').value = new Date().getFullYear();
-
-  document.getElementById('btn-bury').style.display = 'flex';
-  document.getElementById('btn-pursue').textContent = 'Pursue it →';
+  ['f-title','f-hyp','f-cat','f-notes','f-link','f-file','f-kill'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const fyear = document.getElementById('f-year');
+  if (fyear) fyear.value = new Date().getFullYear();
+  const kf = document.getElementById('kill-field');
+  if (kf) kf.style.display = 'none';
+  const bb = document.getElementById('btn-bury');
+  if (bb) { bb.style.display = 'flex'; bb.textContent = '🪦 Bury it'; bb.setAttribute('onclick','showKillField()'); }
+  const bp = document.getElementById('btn-pursue');
+  if (bp) { bp.textContent = 'Pursue it →'; bp.setAttribute('onclick','saveIdea(null)'); }
+  const ai = document.getElementById('ai-scoring-status');
+  if (ai) ai.style.display = 'none';
   document.getElementById('modal-overlay').style.display = 'flex';
 }
 
