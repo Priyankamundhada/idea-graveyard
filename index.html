@@ -818,8 +818,7 @@ function onDrop(e, zone) {
 function showKillPrompt(idea) {
   return new Promise((resolve) => {
     // Remove any existing
-    const existing = document.getElementById('kill-prompt-bg');
-    if (existing) existing.remove();
+    document.getElementById('kill-prompt-bg')?.remove();
 
     const bg = document.createElement('div');
     bg.id = 'kill-prompt-bg';
@@ -1133,7 +1132,7 @@ function openDrawer(id) {
   const isHot = true; // Show AI analysis for all ideas
   sec('d-hot-sec', true);
   // Set label based on score
-  const scoreLabel = document.getElementById('d-hot-label');
+  const scoreLabel = document.getElementById('d-hot-label'); // may be null - guarded below
   if (scoreLabel) {
     if (idea.state === 'pursuing') scoreLabel.textContent = 'AI analysis';
     else if (idea.score >= 8) scoreLabel.textContent = 'Why this is 🔥 Hot';
