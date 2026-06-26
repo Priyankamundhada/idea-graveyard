@@ -1209,7 +1209,7 @@ function openDrawer(id) {
   sec('d-notes-sec', idea.notes); if(idea.notes) document.getElementById('d-notes').textContent = idea.notes;
   sec('d-kill-sec', idea.kill && idea.state==='buried'); if(idea.kill) document.getElementById('d-kill').textContent = idea.kill;
   const isHot = idea.state === 'buried';
-  sec('d-score-sec', isHot);
+  sec('d-score-sec', false);
   document.getElementById('d-score-fill').style.width = ((idea.score||0)*10)+'%';
   document.getElementById('d-score-text').textContent = (idea.score||0)+'/10';
   sec('d-link-sec', idea.link);
