@@ -82,7 +82,7 @@ In 2-3 sentences, explain specifically why timing or market conditions might be 
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         max_tokens: 400,
         temperature: 0.7,
         messages: [
