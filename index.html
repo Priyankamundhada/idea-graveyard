@@ -680,7 +680,7 @@ function save() { try { localStorage.setItem('ig_ideas', JSON.stringify(ideas));
 
 // ── Helpers ──
 function scoreClass(s) { return s >= 8 ? 'hot' : s >= 5 ? 'warm' : 'cold'; }
-function scoreBadge(s) { return s >= 8 ? '🔥 Hot' : s >= 5 ? '🌤 Warm' : '🧊 Cold'; }
+function scoreBadge(s) { return s >= 7 ? '🔥 Hot' : s >= 4 ? '❆ Worth Revisiting' : '🧊 Cold'; }
 function cats() { return [...new Set(ideas.map(i => i.cat).filter(Boolean))].sort(); }
 
 // ── Render ──
