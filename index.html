@@ -1218,7 +1218,7 @@ function openDrawer(id) {
   sec('d-hot-sec', isHot);
   if(isHot) {
     const lbl = document.getElementById('d-hot-label');
-    if(lbl){ if(idea.score>=8) lbl.textContent='Why this is \uD83D\uDD25 Hot'; else if(idea.score>=5) lbl.textContent='Why this is \uD83C\uDF24 Warm'; else if(idea.score>0) lbl.textContent='Why this is \uD83E\uDDCA Cold'; else lbl.textContent='AI analysis'; }
+    if(lbl){ if(idea.score>=7) lbl.textContent='Why this is 🔥 Hot'; else if(idea.score>=4) lbl.textContent='Why this is ❆ Worth Revisiting'; else if(idea.score>0) lbl.textContent='Why this is 🧊 Cold'; else lbl.textContent='AI analysis'; }
     const reasonEl=document.getElementById('d-hot-reason');
     const loadEl=document.getElementById('d-hot-loading');
     if(reasonEl) reasonEl.style.opacity='1';
