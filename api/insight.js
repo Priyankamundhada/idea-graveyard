@@ -34,7 +34,7 @@ Be a skeptic, not a cheerleader. Most buried ideas are Cold or Warm. Hot should 
     if (action === 'score') {
       try {
         const p = JSON.parse(text);
-        const labelToScore = { 'Hot': 9, 'Warm': 7, 'Cold': 2 };
+        const labelToScore = { 'Hot': 9, 'Warm': 5, 'Cold': 2 };
         const score = labelToScore[p.label] || 5;
         return res.status(200).json({ score, reason: p.reason, label: p.label });
       } catch {
